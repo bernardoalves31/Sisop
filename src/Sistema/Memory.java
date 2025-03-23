@@ -7,7 +7,7 @@ public class Memory {
     public Word[] pos;
 
     private ArrayList<Page> pages;
-    private int numFrame;
+    private int totalPages;
     private int tamMem;
     private int tamPg;
 
@@ -29,13 +29,13 @@ public class Memory {
     }
 
     public Memory(int tamMem, int tamPg) {
-        this.numFrame = tamMem / tamPg;
+        this.totalPages = tamMem / tamPg;
         this.tamMem = tamMem;
         this.tamPg = tamPg;
         this.pos = new Word[tamMem];
         pages = new ArrayList<Page>();
 
-        for (int i = 0; i < numFrame; i++) {
+        for (int i = 0; i < totalPages; i++) {
             Page page = new Page();
             pages.add(page);
         }
@@ -53,8 +53,8 @@ public class Memory {
         return pages;
     }
 
-    public int getNumFrame() {
-        return numFrame;
+    public int getTotalPages() {
+        return totalPages;
     }
 
     public int getTamMem() {
@@ -64,5 +64,4 @@ public class Memory {
     public int getTamPg() {
         return tamPg;
     }
-
 }

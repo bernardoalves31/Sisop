@@ -6,4 +6,7 @@ public interface GMInterface {
 
     void free(int[] tabelaPaginas);
 
+    void load(Word[] programImage, int[] tabelaPaginas);
+
+    void pageControl();
 }

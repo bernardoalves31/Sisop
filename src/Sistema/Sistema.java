@@ -13,7 +13,23 @@ public class Sistema {
 	}
 
 	public void run() {
-		so.utils.loadAndExec(progs.retrieveProgram("fatorialV2"));
+		//so.utils.loadAndExec(progs.retrieveProgram("fatorialV2"));
+
+
+		// System.out.println(hw.mem.pos[0].p);
+		// Word[] programImage = progs.retrieveProgram("fatorialV2");
+
+        // int numPages = (int) Math.ceilDiv(programImage.length, hw.mem.getTamPg());
+		// int[] tabelaPaginas = new int[numPages];
+		
+		// hw.mem.getPages().get(1).setFree(false);
+		// if (so.gm.alloc(programImage.length, tabelaPaginas)) {
+		// 	so.gm.load(programImage, tabelaPaginas);
+		// }
+		// System.out.println(hw.mem.pos[0].p);
+		// System.out.println(hw.mem.pos[8].p);
+
+		//so.gm.pageControl();
 	}
     
 	public static void main(String args[]) {

@@ -3,26 +3,26 @@ package src.Sistema;
 public class GM implements GMInterface {
     private Memory mem;
 
-    public boolean alloc(int nroPalavras, int[] tabelaPaginas) {
-        int numPages = (int) Math.ceil(nroPalavras / mem.getNumFrame());
-        int count = 0;
-        tabelaPaginas = new int[tabelaPaginas.length];
+    public GM(Memory memory) {
+        this.mem = memory;
+    }
 
-        if (numPages > mem.getNumFrame()) {
+    public boolean alloc(int nroPalavras, int[] tabelaPaginas) {
+        int count = 0;
+
+        if (tabelaPaginas.length > mem.getTotalPages()) {
             return false;
         }
 
-        for (int i = 0; i < mem.getNumFrame() && count < numPages; i++) {
+        for (int i = 0; i < mem.getTotalPages() && count < tabelaPaginas.length; i++) {
             if (mem.getPages().get(i).isFree()) {
                 tabelaPaginas[count] = i;
                 count++;
-                mem.getPages().get(i).setFree(false);
             }
         }
-        if (count == numPages)
+        if (count == tabelaPaginas.length)
             return true;
 
-        tabelaPaginas = new int[tabelaPaginas.length];
         return false;
     }
 
@@ -33,4 +33,28 @@ public class GM implements GMInterface {
             count++;
         }
     }
+
+    public void load(Word[] programImage, int[] tabelaPaginas) {
+        int count = 0;
+        for (int i = 0; i < tabelaPaginas.length; i++) {
+            for (int j = 0; j < mem.getTamPg(); j++) {
+                int posMem = mem.calculatePage(tabelaPaginas[i]) + j;
+                mem.pos[posMem] = programImage[count];
+                mem.getPages().get(tabelaPaginas[count]).setFree(false);
+
+                count++;
+                if (programImage.length == count) {
+                    return;
+                }
+            }
+        }
+    }
+
+    public void pageControl() {
+        System.out.printf("%-8s%-8s%-8s%n", "Frame", "Início", "Fim");
+    
+        for (int i = 0; i < mem.getTotalPages(); i++) {
+            System.out.printf("%-8d%-8d%-8d%n", i, i * mem.getTamPg(), (i + 1) * mem.getTamPg() - 1);
+        }
+    }    
 }
