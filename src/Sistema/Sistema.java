@@ -5,8 +5,8 @@ public class Sistema {
 	public SO so;
 	public Programs progs;
 
-	public Sistema(int tamMem) {
-		hw = new HW(tamMem);           // memoria do HW tem tamMem palavras
+	public Sistema(Memory mem) {
+		hw = new HW(mem);           // memoria do HW tem tamMem palavras
 		so = new SO(hw);
 		hw.cpu.setUtilities(so.utils); // permite cpu fazer dump de memoria ao avancar
 		progs = new Programs();
@@ -17,7 +17,10 @@ public class Sistema {
 	}
     
 	public static void main(String args[]) {
-		Sistema s = new Sistema(1024);
+		int tamMem = 1024;
+		int tamPg = 8;
+		
+		Sistema s = new Sistema(new Memory(tamMem, tamPg));
 		s.run();
 	}
 }
