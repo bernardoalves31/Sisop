@@ -7,7 +7,7 @@ public class GM implements GMInterface {
         this.mem = memory;
     }
 
-    public boolean alloc(int nroPalavras, int[] tabelaPaginas) {
+    public boolean canAlloc(int nroPalavras, int[] tabelaPaginas) {
         int count = 0;
 
         if (tabelaPaginas.length > mem.getTotalPages()) {

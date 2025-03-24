@@ -2,7 +2,7 @@ package src.Sistema;
 
 public interface GMInterface {
 
-    boolean alloc(int nroPalavras, int[] tabelaPaginas);
+    boolean canAlloc(int nroPalavras, int[] tabelaPaginas);
 
     void free(int[] tabelaPaginas);
 

@@ -5,6 +5,7 @@ public class SO {
     public SysCallHandling sc;
     public Utilities utils;
     public GM gm;
+    public GP gp;
 
     public SO(HW hw) {
         ih = new InterruptHandling(hw); // rotinas de tratamento de int
@@ -12,5 +13,6 @@ public class SO {
         hw.cpu.setAddressOfHandlers(ih, sc);
         utils = new Utilities(hw);
         gm = new GM(hw.mem);
+        gp = new GP(hw, this);
     }
 }
