@@ -1,5 +1,6 @@
 package src.Sistema;
 
+import java.util.Iterator;
 import java.util.Queue;
 
 public class GP implements GPInterface {
@@ -17,7 +18,7 @@ public class GP implements GPInterface {
         String status;
         String contextData;
 
-        public PCB(int [] tabelaPaginas){
+        public PCB(int[] tabelaPaginas) {
             this.tabelaPaginas = tabelaPaginas;
             this.id = countIds++;
             this.pc = 0;
@@ -29,11 +30,11 @@ public class GP implements GPInterface {
         this.hw = hw;
         this.countIds = 0;
     }
-    
-    public boolean createProcess(Word[] programImage){
+
+    public boolean createProcess(Word[] programImage) {
         int numPages = (int) Math.ceilDiv(programImage.length, hw.mem.getTamPg());
-        if(numPages > hw.mem.getTotalPages()){
-            return false; 
+        if (numPages > hw.mem.getTotalPages()) {
+            return false;
         }
 
         int[] tabelaPaginas = new int[numPages];
@@ -49,9 +50,17 @@ public class GP implements GPInterface {
         return true;
     }
 
-    public void freeProcess(int id){
-        //so.gm.free();
-        // Terminar a aqui
+    public void freeProcess(int id) {
+        PCB removeItem = null;
+        Iterator<PCB> iterator = processesInQueue.iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().id == id) {
+                removeItem = iterator.next(); // Remove item from queue
+                iterator.remove();
+                so.gm.free(removeItem.tabelaPaginas); // Remove item from memory
+                return;
+            }
+        }
     }
 
     public PCB peekProcessInQueue() {
