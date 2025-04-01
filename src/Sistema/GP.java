@@ -50,7 +50,7 @@ public class GP implements GPInterface {
         return true;
     }
 
-    public void freeProcess(int id) {
+    public boolean freeProcess(int id) {
         PCB removeItem = null;
         Iterator<PCB> iterator = processesInQueue.iterator();
         while (iterator.hasNext()) {
@@ -58,8 +58,31 @@ public class GP implements GPInterface {
                 removeItem = iterator.next(); // Remove item from queue
                 iterator.remove();
                 so.gm.free(removeItem.tabelaPaginas); // Remove item from memory
-                return;
+                return true;
             }
+        }
+        return false;
+    }
+
+    public void listProcess(int id) {
+        PCB pcb = getProcess(id);
+        System.out.printf("Process id: %d  pages: %d  priority: %d  pc: %d  status: %s\n", pcb.id , pcb.tabelaPaginas, pcb.priority, pcb.pc, pcb.status);
+    }
+
+    public PCB getProcess(int id) {
+        Iterator<PCB> iterator = processesInQueue.iterator();
+        PCB pcb = (PCB) iterator;
+        while(iterator.hasNext()) {
+            if(pcb.id == id) return pcb;
+        }
+        return null;
+    }
+
+    public void ps() {
+        Iterator<PCB> iterator = processesInQueue.iterator();
+        while(iterator.hasNext()) {
+            PCB pcb = (PCB) iterator;
+            System.out.printf("Process id: %d  pages: %d  priority: %d  pc: %d  status: %s\n", pcb.id , pcb.tabelaPaginas, pcb.priority, pcb.pc, pcb.status);
         }
     }
 
