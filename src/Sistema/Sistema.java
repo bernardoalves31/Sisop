@@ -22,21 +22,26 @@ public class Sistema {
 
 		Word[] programImage = progs.retrieveProgram("fatorialV2");
 
-		int numPages = (int) Math.ceilDiv(programImage.length, hw.mem.getTamPg());
-		int[] tabelaPaginas = new int[numPages];
-		hw.mem.getPages().get(1).setFree(false);
-		hw.mem.getPages().get(3).setFree(false);
-		hw.mem.getPages().get(0).setFree(false);
-		so.gp.createProcess(programImage);
+		int[] tabelaPaginas = new int[so.gp.calcNumPages(programImage)];
+
+		// hw.mem.getPages().get(0).setFree(false);
+		// hw.mem.getPages().get(1).setFree(false);
+		// hw.mem.getPages().get(2).setFree(false);
+		// hw.mem.getPages().get(3).setFree(false);
+		// hw.mem.getPages().get(4).setFree(false);
+		so.gp.createProcess(programImage, tabelaPaginas);
 		// if (so.gm.canAlloc(programImage.length, tabelaPaginas)) {
 		// so.gm.load(programImage, tabelaPaginas);
 		// }
 		so.utils.dump(0, programImage.length);
 		System.out.println(hw.mem.pos[0].p);
 		System.out.println(hw.mem.pos[8].p);
-		hw.cpu.setContext(16);
-		hw.cpu.run(tabelaPaginas, hw.mem.getTamPg());
-		so.utils.dump(0, programImage.length);
+		hw.cpu.setContext(0);
+		hw.cpu.run(tabelaPaginas);
+		System.out.println(tabelaPaginas[0]);
+		System.out.println(tabelaPaginas[1]);
+		System.out.println(tabelaPaginas[2]);
+		so.utils.dump(0, 64);
 		so.gp.ps();
 		so.gp.listProcess(0);
 	//	so.gm.free(tabelaPaginas);

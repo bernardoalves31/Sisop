@@ -35,13 +35,8 @@ public class GP implements GPInterface {
         this.processesInQueue = new LinkedList<PCB>(); 
     }
 
-    public boolean createProcess(Word[] programImage) {
-        int numPages = (int) Math.ceilDiv(programImage.length, hw.mem.getTamPg());
-        if (numPages > hw.mem.getTotalPages()) {
-            return false;
-        }
+    public boolean createProcess(Word[] programImage, int[] tabelaPaginas) {
 
-        int[] tabelaPaginas = new int[numPages];
 
         if (!so.gm.canAlloc(programImage.length, tabelaPaginas)) {
             return false;
@@ -52,6 +47,10 @@ public class GP implements GPInterface {
         processesInQueue.add(pcb);
 
         return true;
+    }
+
+    public int calcNumPages(Word[] programImage) {
+        return Math.ceilDiv(programImage.length, hw.mem.getTamPg());
     }
 
     public boolean freeProcess(int id) {
