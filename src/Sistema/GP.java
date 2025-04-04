@@ -1,6 +1,8 @@
 package src.Sistema;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Queue;
 
 public class GP implements GPInterface {
@@ -27,8 +29,10 @@ public class GP implements GPInterface {
     }
 
     public GP(HW hw, SO so) {
+        this.so = so;
         this.hw = hw;
         this.countIds = 0;
+        this.processesInQueue = new LinkedList<PCB>(); 
     }
 
     public boolean createProcess(Word[] programImage) {
@@ -66,13 +70,31 @@ public class GP implements GPInterface {
 
     public void listProcess(int id) {
         PCB pcb = getProcess(id);
-        System.out.printf("Process id: %d  pages: %d  priority: %d  pc: %d  status: %s\n", pcb.id , pcb.tabelaPaginas, pcb.priority, pcb.pc, pcb.status);
+        System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id , Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
+        for (int i = 0; i < pcb.tabelaPaginas.length; i++) {
+            int page = pcb.tabelaPaginas[i];
+            for (int j = 0; j < hw.mem.getTamPg(); j++) {
+                int posMem = hw.mem.calculatePage(page) + j;
+                Word w = hw.mem.pos[posMem];
+                System.out.print("Page: " + page);
+                System.out.print(" Position: "+ posMem);
+                System.out.print(" [ ");
+                System.out.print(w.opc);
+                System.out.print(", ");
+                System.out.print(w.ra);
+                System.out.print(", ");
+                System.out.print(w.rb);
+                System.out.print(", ");
+                System.out.print(w.p);
+                System.out.println("  ] ");
+            }
+        }
     }
 
     public PCB getProcess(int id) {
         Iterator<PCB> iterator = processesInQueue.iterator();
-        PCB pcb = (PCB) iterator;
         while(iterator.hasNext()) {
+            PCB pcb = iterator.next();
             if(pcb.id == id) return pcb;
         }
         return null;
@@ -81,8 +103,8 @@ public class GP implements GPInterface {
     public void ps() {
         Iterator<PCB> iterator = processesInQueue.iterator();
         while(iterator.hasNext()) {
-            PCB pcb = (PCB) iterator;
-            System.out.printf("Process id: %d  pages: %d  priority: %d  pc: %d  status: %s\n", pcb.id , pcb.tabelaPaginas, pcb.priority, pcb.pc, pcb.status);
+            PCB pcb = iterator.next();
+            System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id , Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
         }
     }
 

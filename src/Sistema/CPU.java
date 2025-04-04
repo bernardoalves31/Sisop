@@ -116,7 +116,7 @@ public class CPU {
                         break;
                     case STD: // [A] ← Rs
                         if (legal(ir.p)) {
-                            m[ir.p].opc = Opcode.DATA;
+                            m[ir.p].opc = Opcode.DATA; //Provavelmente o problema Traduzir o endereco
                             m[ir.p].p = reg[ir.ra];
                             pc++;
                             if (debug) 

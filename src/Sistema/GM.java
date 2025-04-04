@@ -36,6 +36,7 @@ public class GM implements GMInterface {
                 mem.pos[posMem] =  new Word(Opcode.___, -1, -1, -1); // Cleaning memory
             }
         }
+        System.gc();
     }
 
     // Load with pages

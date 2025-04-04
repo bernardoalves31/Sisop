@@ -24,19 +24,23 @@ public class Sistema {
 
 		int numPages = (int) Math.ceilDiv(programImage.length, hw.mem.getTamPg());
 		int[] tabelaPaginas = new int[numPages];
-
-//		hw.mem.getPages().get(1).setFree(false);
-		if (so.gm.canAlloc(programImage.length, tabelaPaginas)) {
-		so.gm.load(programImage, tabelaPaginas);
-		}
+		hw.mem.getPages().get(1).setFree(false);
+		hw.mem.getPages().get(3).setFree(false);
+		hw.mem.getPages().get(0).setFree(false);
+		so.gp.createProcess(programImage);
+		// if (so.gm.canAlloc(programImage.length, tabelaPaginas)) {
+		// so.gm.load(programImage, tabelaPaginas);
+		// }
 		so.utils.dump(0, programImage.length);
 		System.out.println(hw.mem.pos[0].p);
 		System.out.println(hw.mem.pos[8].p);
-		hw.cpu.setContext(0);
-		hw.cpu.run();
+		hw.cpu.setContext(16);
+		hw.cpu.run(tabelaPaginas, hw.mem.getTamPg());
 		so.utils.dump(0, programImage.length);
-		so.gm.free(tabelaPaginas);
-		so.utils.dump(0, programImage.length);
+		so.gp.ps();
+		so.gp.listProcess(0);
+	//	so.gm.free(tabelaPaginas);
+	//	so.utils.dump(0, programImage.length);
 
 		//so.gm.pageControl();
 	}
