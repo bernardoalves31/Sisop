@@ -20,14 +20,14 @@ public class Sistema {
 		System.out.println(hw.mem.pos[0].p);
 		System.out.println(hw.mem.pos[8].p);
 
-		Word[] programImage = progs.retrieveProgram("fatorialV2");
+		Word[] programImage = progs.retrieveProgram("fibonacci10");
 
 		int[] tabelaPaginas = new int[so.gp.calcNumPages(programImage)];
 
 		// hw.mem.getPages().get(0).setFree(false);
 		// hw.mem.getPages().get(1).setFree(false);
-		// hw.mem.getPages().get(2).setFree(false);
-		// hw.mem.getPages().get(3).setFree(false);
+		hw.mem.getPages().get(2).setFree(false);
+		hw.mem.getPages().get(3).setFree(false);
 		// hw.mem.getPages().get(4).setFree(false);
 		so.gp.createProcess(programImage, tabelaPaginas);
 		// if (so.gm.canAlloc(programImage.length, tabelaPaginas)) {
@@ -38,12 +38,10 @@ public class Sistema {
 		System.out.println(hw.mem.pos[8].p);
 		hw.cpu.setContext(0);
 		hw.cpu.run(tabelaPaginas);
-		System.out.println(tabelaPaginas[0]);
-		System.out.println(tabelaPaginas[1]);
-		System.out.println(tabelaPaginas[2]);
 		so.utils.dump(0, 64);
+		so.gp.freeProcess(0);
 		so.gp.ps();
-		so.gp.listProcess(0);
+	//	so.utils.dump(0, 64);
 	//	so.gm.free(tabelaPaginas);
 	//	so.utils.dump(0, programImage.length);
 
@@ -70,6 +68,15 @@ public class Sistema {
 			option = scanner.next();
 			switch (option) {
 				case "1":
+					System.out.println("Programs list:");
+					System.out.println("fatorial");
+					System.out.println("fatorialV2");
+					System.out.println("progMinimo");
+					System.out.println("fibonacci10");
+					System.out.println("fibonacci10v2");
+					System.out.println("fibonacciREAD");
+					System.out.println("PB");
+					System.out.println("PC");
 					break;
 				case "2":
 					System.out.println("Insert Id to remove");

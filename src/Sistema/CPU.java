@@ -134,8 +134,8 @@ public class CPU {
                         break;
                     case STX: // [Rd] ←Rs
                         if (legal(reg[ir.ra])) {
-                            m[translatePosition(reg[ir.rb])].opc = Opcode.DATA;
-                            m[translatePosition(reg[ir.rb])].p = reg[ir.rb];
+                            m[translatePosition(reg[ir.ra])].opc = Opcode.DATA;
+                            m[translatePosition(reg[ir.ra])].p = reg[ir.rb];
                             pc++;
                         }
                         ;

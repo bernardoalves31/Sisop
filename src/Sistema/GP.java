@@ -57,8 +57,8 @@ public class GP implements GPInterface {
         PCB removeItem = null;
         Iterator<PCB> iterator = processesInQueue.iterator();
         while (iterator.hasNext()) {
-            if (iterator.next().id == id) {
-                removeItem = iterator.next(); // Remove item from queue
+            removeItem = iterator.next(); // Remove item from queue
+            if(removeItem.id == id) {
                 iterator.remove();
                 so.gm.free(removeItem.tabelaPaginas); // Remove item from memory
                 return true;
