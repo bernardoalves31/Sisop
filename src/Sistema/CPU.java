@@ -128,7 +128,7 @@ public class CPU {
                             pc++;
                             if (debug) 
                                 {   System.out.print("                                  ");   
-                                    u.dump(ir.p,ir.p+1);							
+                                    u.dump(translatePosition(ir.p),translatePosition(ir.p)+1);						
                                 }
                             }
                         break;
@@ -225,7 +225,7 @@ public class CPU {
                             if (reg[ir.rb] > 0) {
                                pc = m[translatePosition(ir.p)].p;
                             } else {
-                              pc++;
+                                pc++;
                            }
                         }
                         break;
