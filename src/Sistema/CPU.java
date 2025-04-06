@@ -75,6 +75,10 @@ public class CPU {
         irpt = Interrupts.noInterrupt;                // reset da interrupcao registrada
     }
 
+    public void setDebug(boolean _debug) { 
+        debug = _debug;
+    }
+
     public void run(int[] tabelaPaginas) {                               // execucao da CPU supoe que o contexto da CPU, vide acima, 
                                                       // esta devidamente setado
         this.tabelaPaginas = tabelaPaginas;
@@ -85,7 +89,7 @@ public class CPU {
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
-                ir = m[pc];  // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por pc, guarda em ir
+                ir = m[translatePosition(pc)];  // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por pc, guarda em ir
                              // resto é dump de debug
                 if (debug) {
                     System.out.print("                                              regs: ");
@@ -96,7 +100,7 @@ public class CPU {
                     System.out.println();
                 }
                 if (debug) {
-                    System.out.print("                      pc: " + pc + "       exec: ");
+                    System.out.print("                      pc: " + translatePosition(pc) + "       exec: ");
                     u.dump(ir);
                 }
 
@@ -173,49 +177,49 @@ public class CPU {
 
                     // Instrucoes JUMP
                     case JMP: // PC <- k
-                        pc = translatePosition(ir.p);
+                        pc = ir.p;
                         break;
                     case JMPIM: // PC <- [A]
                               pc = m[translatePosition(ir.p)].p;
                         break;
                     case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
                         if (reg[ir.rb] > 0) {
-                            pc = translatePosition(reg[ir.ra]);
+                            pc = reg[ir.ra];
                         } else {
                             pc++;
                         }
                         break;
                     case JMPIGK: // If RC > 0 then PC <- k else PC++
                         if (reg[ir.rb] > 0) {
-                            pc = translatePosition(ir.p);
+                            pc = ir.p;
                         } else {
                             pc++;
                         }
                         break;
                     case JMPILK: // If RC < 0 then PC <- k else PC++
                         if (reg[ir.rb] < 0) {
-                            pc = translatePosition(ir.p);
+                            pc = ir.p;
                         } else {
                             pc++;
                         }
                         break;
                     case JMPIEK: // If RC = 0 then PC <- k else PC++
                         if (reg[ir.rb] == 0) {
-                            pc = translatePosition(ir.p);
+                            pc = ir.p;
                         } else {
                             pc++;
                         }
                         break;
                     case JMPIL: // if Rc < 0 then PC <- Rs Else PC <- PC +1
                         if (reg[ir.rb] < 0) {
-                            pc = translatePosition(reg[ir.ra]);
+                            pc = reg[ir.ra];
                         } else {
                             pc++;
                         }
                         break;
                     case JMPIE: // If Rc = 0 Then PC <- Rs Else PC <- PC +1
                         if (reg[ir.rb] == 0) {
-                            pc = translatePosition(reg[ir.ra]);
+                            pc = reg[ir.ra];
                         } else {
                             pc++;
                         }
@@ -245,7 +249,7 @@ public class CPU {
                         break;
                     case JMPIGT: // If RS>RC then PC <- k else PC++
                         if (reg[ir.ra] > reg[ir.rb]) {
-                            pc = translatePosition(ir.p);
+                            pc = ir.p;
                         } else {
                             pc++;
                         }

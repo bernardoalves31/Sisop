@@ -2,7 +2,7 @@ package src.Sistema;
 
 public interface GPInterface {
 
-    boolean createProcess(Word[] program);
+    boolean createProcess(Word[] programImage, int[] tabelaPaginas);
     
     boolean freeProcess(int program);
 }

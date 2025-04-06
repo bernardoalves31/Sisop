@@ -69,6 +69,10 @@ public class GP implements GPInterface {
 
     public void listProcess(int id) {
         PCB pcb = getProcess(id);
+        if(pcb == null) {
+            System.out.println("Invalid process id");
+            return;
+        }
         System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id , Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
         for (int i = 0; i < pcb.tabelaPaginas.length; i++) {
             int page = pcb.tabelaPaginas[i];
