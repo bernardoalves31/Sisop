@@ -1,96 +1,105 @@
 package src.Sistema;
 
+import src.Sistema.GP.PCB;
+
 public class CPU {
     private int maxInt; // valores maximo e minimo para inteiros nesta cpu
     private int minInt;
-                        // CONTEXTO da CPU ...
-    int pc;     // ... composto de program counter,
-    private Word ir;    // instruction register,
-    int[] reg;  // registradores da CPU
+    // CONTEXTO da CPU ...
+    int pc; // ... composto de program counter,
+    private Word ir; // instruction register,
+    int[] reg; // registradores da CPU
     private Interrupts irpt; // durante instrucao, interrupcao pode ser sinalizada
-                        // FIM CONTEXTO DA CPU: tudo que precisa sobre o estado de um processo para
-                        // executa-lo
-                        // nas proximas versoes isto pode modificar
+    // FIM CONTEXTO DA CPU: tudo que precisa sobre o estado de um processo para
+    // executa-lo
+    // nas proximas versoes isto pode modificar
 
-    private Word[] m;   // m é o array de memória "física", CPU tem uma ref a m para acessar
+    private Word[] m; // m é o array de memória "física", CPU tem uma ref a m para acessar
 
-    private InterruptHandling ih;    // significa desvio para rotinas de tratamento de Int - se int ligada, desvia
-    private SysCallHandling sysCall; // significa desvio para tratamento de chamadas de sistema
+    private InterruptHandling ih; // significa desvio para rotinas de tratamento de Int - se int ligada, desvia
+    public SysCallHandling sysCall; // significa desvio para tratamento de chamadas de sistema
 
-    private boolean cpuStop;    // flag para parar CPU - caso de interrupcao que acaba o processo, ou chamada stop - 
-                                // nesta versao acaba o sistema no fim do prog
+    public boolean cpuStop; // flag para parar CPU - caso de interrupcao que acaba o processo, ou chamada
+                            // stop -
+                            // nesta versao acaba o sistema no fim do prog
 
-                                // auxilio aa depuração
-    private boolean debug;      // se true entao mostra cada instrucao em execucao
-    private Utilities u;        // para debug (dump)
+    // auxilio aa depuração
+    private boolean debug; // se true entao mostra cada instrucao em execucao
+    private Utilities u; // para debug (dump)
 
     // Aux
     private int[] tabelaPaginas;
     private int tamPg;
 
     public CPU(Memory _mem, boolean _debug) { // ref a MEMORIA passada na criacao da CPU
-        maxInt = 32767;            // capacidade de representacao modelada
-        minInt = -32767;           // se exceder deve gerar interrupcao de overflow
-        m = _mem.pos;   
-        tamPg = _mem.getTamPg();           // usa o atributo 'm' para acessar a memoria, só para ficar mais pratico
-        reg = new int[10];         // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
+        maxInt = 32767; // capacidade de representacao modelada
+        minInt = -32767; // se exceder deve gerar interrupcao de overflow
+        m = _mem.pos;
+        tamPg = _mem.getTamPg(); // usa o atributo 'm' para acessar a memoria, só para ficar mais pratico
+        reg = new int[10]; // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
 
-        debug = _debug;            // se true, print da instrucao em execucao
+        debug = _debug; // se true, print da instrucao em execucao
 
     }
 
     public void setAddressOfHandlers(InterruptHandling _ih, SysCallHandling _sysCall) {
-        ih = _ih;                  // aponta para rotinas de tratamento de int
-        sysCall = _sysCall;        // aponta para rotinas de tratamento de chamadas de sistema
+        ih = _ih; // aponta para rotinas de tratamento de int
+        sysCall = _sysCall; // aponta para rotinas de tratamento de chamadas de sistema
     }
 
     public void setUtilities(Utilities _u) {
-        u = _u;                     // aponta para rotinas utilitárias - fazer dump da memória na tela
+        u = _u; // aponta para rotinas utilitárias - fazer dump da memória na tela
     }
 
-
-                                   // verificação de enderecamento 
-    private boolean legal(int e) { // todo acesso a memoria tem que ser verificado se é válido - 
+    // verificação de enderecamento
+    private boolean legal(int e) { // todo acesso a memoria tem que ser verificado se é válido -
                                    // aqui no caso se o endereco é um endereco valido em toda memoria
         if (e >= 0 && e < m.length) {
             return true;
         } else {
-            irpt = Interrupts.intEnderecoInvalido;    // se nao for liga interrupcao no meio da exec da instrucao
+            irpt = Interrupts.intEnderecoInvalido; // se nao for liga interrupcao no meio da exec da instrucao
             return false;
         }
     }
 
-    private boolean testOverflow(int v) {             // toda operacao matematica deve avaliar se ocorre overflow
+    private boolean testOverflow(int v) { // toda operacao matematica deve avaliar se ocorre overflow
         if ((v < minInt) || (v > maxInt)) {
-            irpt = Interrupts.intOverflow;            // se houver liga interrupcao no meio da exec da instrucao
+            irpt = Interrupts.intOverflow; // se houver liga interrupcao no meio da exec da instrucao
             return false;
         }
         ;
         return true;
     }
 
-    public void setContext(int _pc) {                 // usado para setar o contexto da cpu para rodar um processo
-                                                      // [ nesta versao é somente colocar o PC na posicao 0 ]
-        pc = _pc;                                     // pc cfe endereco logico
-        irpt = Interrupts.noInterrupt;                // reset da interrupcao registrada
+    public void setContext(int _pc) { // usado para setar o contexto da cpu para rodar um processo
+                                      // [ nesta versao é somente colocar o PC na posicao 0 ]
+        pc = _pc; // pc cfe endereco logico
+        irpt = Interrupts.noInterrupt; // reset da interrupcao registrada
+        cpuStop = false;
     }
 
-    public void setDebug(boolean _debug) { 
+    public void setDebug(boolean _debug) {
         debug = _debug;
     }
 
-    public void run(int[] tabelaPaginas) {                               // execucao da CPU supoe que o contexto da CPU, vide acima, 
-                                                      // esta devidamente setado
-        this.tabelaPaginas = tabelaPaginas;
+    public void setInterruption(Interrupts interrupts) {
+        irpt = interrupts;
+    }
+
+    public void run(PCB process) { // execucao da CPU supoe que o contexto da CPU, vide acima,
+        // esta devidamente setado
+        this.tabelaPaginas = process.tabelaPaginas;
 
         cpuStop = false;
-        while (!cpuStop) {      // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada caso.
+        while (!cpuStop) { // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada
+                           // caso.
 
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
-                ir = m[translatePosition(pc)];  // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por pc, guarda em ir
-                             // resto é dump de debug
+                ir = m[translatePosition(pc)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
+                                               // pc, guarda em ir
+                // resto é dump de debug
                 if (debug) {
                     System.out.print("                                              regs: ");
                     for (int i = 0; i < 10; i++) {
@@ -104,12 +113,13 @@ public class CPU {
                     u.dump(ir);
                 }
 
-            // --------------------------------------------------------------------------------------------------
-            // FASE DE EXECUCAO DA INSTRUCAO CARREGADA NO ir
-                switch (ir.opc) {       // conforme o opcode (código de operação) executa
+                // --------------------------------------------------------------------------------------------------
+                // FASE DE EXECUCAO DA INSTRUCAO CARREGADA NO ir
+                switch (ir.opc) { // conforme o opcode (código de operação) executa
 
                     // Instrucoes de Busca e Armazenamento em Memoria
-                    case LDI: // Rd ← k        veja a tabela de instrucoes do HW simulado para entender a semantica da instrucao
+                    case LDI: // Rd ← k veja a tabela de instrucoes do HW simulado para entender a semantica
+                              // da instrucao
                         reg[ir.ra] = ir.p;
                         pc++;
                         break;
@@ -127,14 +137,14 @@ public class CPU {
                         break;
                     case STD: // [A] ← Rs
                         if (legal(ir.p)) {
-                            m[translatePosition(ir.p)].opc = Opcode.DATA; 
+                            m[translatePosition(ir.p)].opc = Opcode.DATA;
                             m[translatePosition(ir.p)].p = reg[ir.ra];
                             pc++;
-                            if (debug) 
-                                {   System.out.print("                                  ");   
-                                    u.dump(translatePosition(ir.p),translatePosition(ir.p)+1);						
-                                }
+                            if (debug) {
+                                System.out.print("                                  ");
+                                u.dump(translatePosition(ir.p), translatePosition(ir.p) + 1);
                             }
+                        }
                         break;
                     case STX: // [Rd] ←Rs
                         if (legal(reg[ir.ra])) {
@@ -180,7 +190,7 @@ public class CPU {
                         pc = ir.p;
                         break;
                     case JMPIM: // PC <- [A]
-                              pc = m[translatePosition(ir.p)].p;
+                        pc = m[translatePosition(ir.p)].p;
                         break;
                     case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
                         if (reg[ir.rb] > 0) {
@@ -225,12 +235,12 @@ public class CPU {
                         }
                         break;
                     case JMPIGM: // If RC > 0 then PC <- [A] else PC++
-                        if (legal(ir.p)){
+                        if (legal(ir.p)) {
                             if (reg[ir.rb] > 0) {
-                               pc = m[translatePosition(ir.p)].p;
+                                pc = m[translatePosition(ir.p)].p;
                             } else {
                                 pc++;
-                           }
+                            }
                         }
                         break;
                     case JMPILM: // If RC < 0 then PC <- k else PC++
@@ -262,7 +272,7 @@ public class CPU {
                     // Chamadas de sistema
                     case SYSCALL:
                         sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
-                                            // temos IO
+                                          // temos IO
                         pc++;
                         break;
 
@@ -279,16 +289,17 @@ public class CPU {
             }
             // --------------------------------------------------------------------------------------------------
             // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
-            if (irpt != Interrupts.noInterrupt) { // existe interrupção
-                ih.handle(irpt);                  // desvia para rotina de tratamento - esta rotina é do SO
-                cpuStop = true;                   // nesta versao, para a CPU
+            if (irpt != Interrupts.noInterrupt) { // existe interrupção1
+                process.pc = pc;
+                ih.handle(irpt); // desvia para rotina de tratamento - esta rotina é do SO
+                cpuStop = true; // nesta versao, para a CPU
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }
 
     public int translatePosition(int pos) {
         int page = pos / tamPg;
-        int offset = pos %  tamPg;
+        int offset = pos % tamPg;
 
         return (tabelaPaginas[page] * tamPg) + offset;
     }

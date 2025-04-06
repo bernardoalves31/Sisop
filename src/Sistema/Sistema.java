@@ -16,48 +16,13 @@ public class Sistema {
 	}
 
 	public void run() {
-		menu();
-//		so.utils.loadAndExec(progs.retrieveProgram("fatorialV2"));
-		System.out.println(hw.mem.pos[0].p);
-		System.out.println(hw.mem.pos[8].p);
-
-		Word[] programImage = progs.retrieveProgram("fatorialV2");
-
-		int[] tabelaPaginas = new int[so.gp.calcNumPages(programImage)];
-
-		// hw.mem.getPages().get(0).setFree(false);
-		hw.mem.getPages().get(1).setFree(false);
-		// hw.mem.getPages().get(2).setFree(false);
-		hw.mem.getPages().get(3).setFree(false);
-		// hw.mem.getPages().get(4).setFree(false);
-		so.gp.createProcess(programImage, tabelaPaginas);
-		// if (so.gm.canAlloc(programImage.length, tabelaPaginas)) {
-		// so.gm.load(programImage, tabelaPaginas);
-		// }
-		so.utils.dump(0, programImage.length);
-		System.out.println(hw.mem.pos[0].p);
-		System.out.println(hw.mem.pos[8].p);
-		hw.cpu.setContext(0);
-		so.gp.listProcess(0);
-		hw.cpu.run(tabelaPaginas);
-		System.out.println("-------------------------------------------- end of program 1\n\n");
-		hw.mem.getPages().get(1).setFree(true);
-		hw.mem.getPages().get(3).setFree(true);
-		int[] tabelaPaginas2 = new int[so.gp.calcNumPages(programImage)];
-		Word[] programImage2 = progs.retrieveProgram("fatorialV2");
-		so.gp.createProcess(programImage2, tabelaPaginas2);
-		hw.cpu.setContext(0);
-		hw.cpu.run(tabelaPaginas2);
-
-		so.utils.dump(0, 64);
-	//	so.gp.listProcess(0);
-	//	so.gp.freeProcess(0);
-	//	so.gp.ps();
-	//	so.utils.dump(0, 64);
-	//	so.gm.free(tabelaPaginas);
-	//	so.utils.dump(0, programImage.length);
-
-		//so.gm.pageControl();
+		Thread menuThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				menu();
+			}
+		});
+		menuThread.start();
 	}
 
 	public void menu() {
@@ -74,6 +39,7 @@ public class Sistema {
 			System.out.println("5 - List memory");
 			System.out.println("6 - Trace on");
 			System.out.println("7 - Trace off");
+			System.out.println("8 - Execute all");
 			System.out.println("0 - Exit");
 			System.out.println("---------------------------");
 
@@ -96,7 +62,7 @@ public class Sistema {
 					switch (option) {
 						case "1":
 							int[] tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fatorial"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("fatorial"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("fatorial"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
@@ -104,49 +70,49 @@ public class Sistema {
 							break;
 						case "2":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fatorialV2"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("fatorialV2"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("fatorialV2"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "3":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("progMinimo"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("progMinimo"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("progMinimo"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "4":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fibonacci10"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("fibonacci10"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("fibonacci10"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
-						case "5":	
+						case "5":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fibonacci10v2"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("fibonacci10v2"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("fibonacci10v2"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "6":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fibonacciREAD"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("fibonacciREAD"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("fibonacciREAD"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "7":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("PB"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("PB"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("PB"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "8":
 							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("PC"))];
-							if(!so.gp.createProcess(progs.retrieveProgram("PC"), tabelaPaginas)){
+							if (!so.gp.createProcess(progs.retrieveProgram("PC"), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
@@ -157,13 +123,13 @@ public class Sistema {
 						default:
 							break;
 					}
-					
+
 					break;
 				case "2":
 					System.out.println("Insert Id to remove");
 					String input = scanner.next();
 					int id = Integer.parseInt(input);
-					if(!so.gp.freeProcess(id)) {
+					if (!so.gp.freeProcess(id)) {
 						System.out.println("Invalid id process");
 					}
 					System.out.println("Process removed sucessfully");
@@ -172,7 +138,7 @@ public class Sistema {
 				case "3":
 					so.gp.ps(); // List all processes
 					break;
-				
+
 				case "4":
 					System.out.println("Insert Id to list");
 					input = scanner.next();
@@ -199,6 +165,11 @@ public class Sistema {
 					System.out.println("Debug mode off");
 					break;
 
+				case "8":
+					execAll();
+					System.out.println("Execute all");
+					break;
+
 				case "0":
 					System.out.println("Exiting...");
 					break;
@@ -210,6 +181,31 @@ public class Sistema {
 		}
 
 		scanner.close();
+	}
+
+	public void execAll() {
+		Thread processThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				so.ps.running();
+			}
+		});
+		processThread.start();
+
+		Thread timerThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(10);
+						so.ps.interruptTimeOut();
+					} catch (InterruptedException e) {
+						System.out.println("Thread de timeout interrompida: " + e.getMessage());
+					}
+				}
+			}
+		});
+		timerThread.start();
 	}
 
 	public static void main(String args[]) {

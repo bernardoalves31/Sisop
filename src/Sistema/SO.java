@@ -6,6 +6,7 @@ public class SO {
     public Utilities utils;
     public GM gm;
     public GP gp;
+    public ProcessScheduler ps;
 
     public SO(HW hw) {
         ih = new InterruptHandling(hw); // rotinas de tratamento de int
@@ -14,5 +15,6 @@ public class SO {
         utils = new Utilities(hw);
         gm = new GM(hw.mem);
         gp = new GP(hw, this);
+        ps = new ProcessScheduler(gp, hw.cpu);
     }
 }
