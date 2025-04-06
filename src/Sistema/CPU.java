@@ -24,10 +24,15 @@ public class CPU {
     private boolean debug;      // se true entao mostra cada instrucao em execucao
     private Utilities u;        // para debug (dump)
 
+    // Aux
+    private int[] tabelaPaginas;
+    private int tamPg;
+
     public CPU(Memory _mem, boolean _debug) { // ref a MEMORIA passada na criacao da CPU
         maxInt = 32767;            // capacidade de representacao modelada
         minInt = -32767;           // se exceder deve gerar interrupcao de overflow
-        m = _mem.pos;              // usa o atributo 'm' para acessar a memoria, só para ficar mais pratico
+        m = _mem.pos;   
+        tamPg = _mem.getTamPg();           // usa o atributo 'm' para acessar a memoria, só para ficar mais pratico
         reg = new int[10];         // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
 
         debug = _debug;            // se true, print da instrucao em execucao
@@ -70,15 +75,21 @@ public class CPU {
         irpt = Interrupts.noInterrupt;                // reset da interrupcao registrada
     }
 
-    public void run() {                               // execucao da CPU supoe que o contexto da CPU, vide acima, 
+    public void setDebug(boolean _debug) { 
+        debug = _debug;
+    }
+
+    public void run(int[] tabelaPaginas) {                               // execucao da CPU supoe que o contexto da CPU, vide acima, 
                                                       // esta devidamente setado
+        this.tabelaPaginas = tabelaPaginas;
+
         cpuStop = false;
         while (!cpuStop) {      // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada caso.
 
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
-                ir = m[pc];  // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por pc, guarda em ir
+                ir = m[translatePosition(pc)];  // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por pc, guarda em ir
                              // resto é dump de debug
                 if (debug) {
                     System.out.print("                                              regs: ");
@@ -89,7 +100,7 @@ public class CPU {
                     System.out.println();
                 }
                 if (debug) {
-                    System.out.print("                      pc: " + pc + "       exec: ");
+                    System.out.print("                      pc: " + translatePosition(pc) + "       exec: ");
                     u.dump(ir);
                 }
 
@@ -104,31 +115,31 @@ public class CPU {
                         break;
                     case LDD: // Rd <- [A]
                         if (legal(ir.p)) {
-                            reg[ir.ra] = m[ir.p].p;
+                            reg[ir.ra] = m[translatePosition(ir.p)].p;
                             pc++;
                         }
                         break;
                     case LDX: // RD <- [RS] // NOVA
                         if (legal(reg[ir.rb])) {
-                            reg[ir.ra] = m[reg[ir.rb]].p;
+                            reg[ir.ra] = m[translatePosition(reg[ir.rb])].p;
                             pc++;
                         }
                         break;
                     case STD: // [A] ← Rs
                         if (legal(ir.p)) {
-                            m[ir.p].opc = Opcode.DATA;
-                            m[ir.p].p = reg[ir.ra];
+                            m[translatePosition(ir.p)].opc = Opcode.DATA; 
+                            m[translatePosition(ir.p)].p = reg[ir.ra];
                             pc++;
                             if (debug) 
                                 {   System.out.print("                                  ");   
-                                    u.dump(ir.p,ir.p+1);							
+                                    u.dump(translatePosition(ir.p),translatePosition(ir.p)+1);						
                                 }
                             }
                         break;
                     case STX: // [Rd] ←Rs
                         if (legal(reg[ir.ra])) {
-                            m[reg[ir.ra]].opc = Opcode.DATA;
-                            m[reg[ir.ra]].p = reg[ir.rb];
+                            m[translatePosition(reg[ir.ra])].opc = Opcode.DATA;
+                            m[translatePosition(reg[ir.ra])].p = reg[ir.rb];
                             pc++;
                         }
                         ;
@@ -169,7 +180,7 @@ public class CPU {
                         pc = ir.p;
                         break;
                     case JMPIM: // PC <- [A]
-                              pc = m[ir.p].p;
+                              pc = m[translatePosition(ir.p)].p;
                         break;
                     case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
                         if (reg[ir.rb] > 0) {
@@ -216,22 +227,22 @@ public class CPU {
                     case JMPIGM: // If RC > 0 then PC <- [A] else PC++
                         if (legal(ir.p)){
                             if (reg[ir.rb] > 0) {
-                               pc = m[ir.p].p;
+                               pc = m[translatePosition(ir.p)].p;
                             } else {
-                              pc++;
+                                pc++;
                            }
                         }
                         break;
                     case JMPILM: // If RC < 0 then PC <- k else PC++
                         if (reg[ir.rb] < 0) {
-                            pc = m[ir.p].p;
+                            pc = m[translatePosition(ir.p)].p;
                         } else {
                             pc++;
                         }
                         break;
                     case JMPIEM: // If RC = 0 then PC <- k else PC++
                         if (reg[ir.rb] == 0) {
-                            pc = m[ir.p].p;
+                            pc = m[translatePosition(ir.p)].p;
                         } else {
                             pc++;
                         }
@@ -273,5 +284,12 @@ public class CPU {
                 cpuStop = true;                   // nesta versao, para a CPU
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
+    }
+
+    public int translatePosition(int pos) {
+        int page = pos / tamPg;
+        int offset = pos %  tamPg;
+
+        return (tabelaPaginas[page] * tamPg) + offset;
     }
 }

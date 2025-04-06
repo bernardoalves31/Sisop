@@ -27,25 +27,34 @@ public class GM implements GMInterface {
     }
 
     public void free(int[] tabelaPaginas) {
-        int count = 0;
         for (int i = 0; i < tabelaPaginas.length; i++) {
-            mem.getPages().get(tabelaPaginas[count]).setFree(true);
-            count++;
+            mem.getPages().get(tabelaPaginas[i]).setFree(true); // Cleaning pages
         }
-    }
-
-    public void load(Word[] programImage, int[] tabelaPaginas) {
-        int count = 0;
         for (int i = 0; i < tabelaPaginas.length; i++) {
             for (int j = 0; j < mem.getTamPg(); j++) {
                 int posMem = mem.calculatePage(tabelaPaginas[i]) + j;
-                mem.pos[posMem] = programImage[count];
-                mem.getPages().get(tabelaPaginas[count]).setFree(false);
+                mem.pos[posMem] =  new Word(Opcode.___, -1, -1, -1); // Cleaning memory
+            }
+        }
+        System.gc();
+    }
 
+    // Load with pages
+    public void load(Word[] programImage, int[] tabelaPaginas) {
+        
+        for (int i = 0; i < tabelaPaginas.length; i++) {
+            mem.getPages().get(tabelaPaginas[i]).setFree(false);  // Setting pages to false for load
+        }
+
+        int count = 0;
+
+        for (int i = 0; i < tabelaPaginas.length; i++) {
+            for (int j = 0; j < mem.getTamPg(); j++) {
+                int posMem = mem.calculatePage(tabelaPaginas[i]) + j; // Address with page
+                mem.pos[posMem] = programImage[count]; // Load
                 count++;
-                if (programImage.length == count) {
-                    return;
-                }
+
+                if(count >= programImage.length) return;
             }
         }
     }
