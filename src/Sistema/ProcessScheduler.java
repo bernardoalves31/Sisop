@@ -18,11 +18,11 @@ public class ProcessScheduler {
             if (currentPcb == null)
                 continue;
 
-            cpu.setContext(currentPcb.pc);
+            cpu.setContext(currentPcb.pc, currentPcb.contextData);
             if (!cpu.sysCall.stop) {
                 cpu.run(currentPcb);
             } else {
-                gp.getProcessQueue().remove();
+                removeProcess(currentPcb);
                 cpu.sysCall.stop = false;
             }
         }
@@ -36,8 +36,12 @@ public class ProcessScheduler {
     public void changeProcess() {
         PCB pcb = gp.peekProcessInQueue();
 
+        removeProcess(pcb);
         gp.getProcessQueue().add(pcb);
-        gp.getProcessQueue().remove();
+    }
+
+    public synchronized void removeProcess(PCB pcb) {
+        gp.getProcessQueue().remove(pcb);
     }
 
 }

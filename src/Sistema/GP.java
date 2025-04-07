@@ -18,13 +18,14 @@ public class GP implements GPInterface {
         int priority;
         int pc;
         String status;
-        String contextData;
+        int[] contextData;
 
         public PCB(int[] tabelaPaginas) {
             this.tabelaPaginas = tabelaPaginas;
             this.id = countIds++;
             this.pc = 0;
             this.priority = 0;
+            this.contextData = new int[10];
         }
     }
 
