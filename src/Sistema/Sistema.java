@@ -158,10 +158,12 @@ public class Sistema {
 					break;
 				case "6":
 					hw.cpu.setDebug(true);
+					so.ps.setDebug(true);
 					System.out.println("Debug mode on");
 					break;
 				case "7":
 					hw.cpu.setDebug(false);
+					so.ps.setDebug(false);
 					System.out.println("Debug mode off");
 					break;
 

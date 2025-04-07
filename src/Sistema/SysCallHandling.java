@@ -8,10 +8,12 @@ public class SysCallHandling {
         hw = _hw;
     }
 
-    public void stop() { // chamada de sistema indicando final de programa
+    public void stop(boolean debug) { // chamada de sistema indicando final de programa
                          // nesta versao cpu simplesmente pára
         stop = true;
-        System.out.println("                                               SYSCALL STOP");
+        if(debug) {
+            System.out.println("                                               SYSCALL STOP");
+        }
     }
 
     public void handle() { // chamada de sistema

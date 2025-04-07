@@ -10,6 +10,7 @@ public class ProcessScheduler {
     public ProcessScheduler(GP gp, CPU cpu) {
         this.gp = gp;
         this.cpu = cpu;
+        this.debug = false;
     }
 
     public void running() {
@@ -22,6 +23,9 @@ public class ProcessScheduler {
             if (!cpu.sysCall.stop) {
                 cpu.run(currentPcb);
             } else {
+                if(!debug) {
+                    gp.freeProcess(currentPcb.id);
+                }
                 removeProcess(currentPcb);
                 cpu.sysCall.stop = false;
             }
@@ -42,6 +46,10 @@ public class ProcessScheduler {
 
     public synchronized void removeProcess(PCB pcb) {
         gp.getProcessQueue().remove(pcb);
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
 }

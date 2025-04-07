@@ -273,13 +273,15 @@ public class CPU {
 
                     // Chamadas de sistema
                     case SYSCALL:
-                        sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
+                        if(debug) {
+                            sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
+                        }
                                           // temos IO
                         pc++;
                         break;
 
                     case STOP: // por enquanto, para execucao
-                        sysCall.stop();
+                        sysCall.stop(debug);
                         cpuStop = true;
                         break;
 
