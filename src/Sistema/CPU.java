@@ -300,6 +300,7 @@ public class CPU {
                 for (int i = 0; i < reg.length; i++) {
                     this.pcb.contextData[i] = reg[i]; 
                 }
+                pcb.pc = pc;
                 ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
             //    cpuStop = true; // nesta versao, para a CPU
             }

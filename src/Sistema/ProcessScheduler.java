@@ -45,9 +45,11 @@ public class ProcessScheduler {
 
     public synchronized void removeProcess(PCB pcb, boolean debug) {
         int id = pcb.id;
-        gp.getProcessQueue().remove();
         if(!debug){
             gp.freeProcess(id);
+        }
+        else{
+            gp.getProcessQueue().remove();
         }
     }
 
