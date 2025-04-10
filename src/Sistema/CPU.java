@@ -105,7 +105,7 @@ public class CPU {
                 ir = m[translatePosition(pc, tabelaPaginas)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
                                                // pc, guarda em ir
                 // resto é dump de debug
-                if (debug) {
+                if (debug && ir.opc != Opcode.NOP) {
                     System.out.print("                                              regs: ");
                     for (int i = 0; i < 10; i++) {
                         System.out.print(" r[" + i + "]:" + reg[i]);
@@ -113,7 +113,7 @@ public class CPU {
                     ;
                     System.out.println();
                 }
-                if (debug) {
+                if (debug && ir.opc != Opcode.NOP) {
                     System.out.print("                      pc: " + translatePosition(this.pc , tabelaPaginas) + "       exec: ");
                     u.dump(ir);
                 }
@@ -300,7 +300,7 @@ public class CPU {
                 for (int i = 0; i < reg.length; i++) {
                     this.pcb.contextData[i] = reg[i]; 
                 }
-                ih.handle(irpt); // desvia para rotina de tratamento - esta rotina é do SO
+                ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
             //    cpuStop = true; // nesta versao, para a CPU
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO

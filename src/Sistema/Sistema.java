@@ -16,6 +16,11 @@ public class Sistema {
 	}
 
 	public void run() {
+		int[] tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("NOP"))];
+		if (!so.gp.createProcess(progs.retrieveProgram("NOP"), tabelaPaginas)) {
+			System.out.println("Error initializing system");
+		}
+
 		Thread menuThread = new Thread(new Runnable() {
 			@Override
 			public void run() {

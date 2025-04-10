@@ -9,9 +9,11 @@ public class InterruptHandling {
         hw = _hw;
     }
 
-    public void handle(Interrupts irpt) {
-        System.out.println(
-        "                                               Interrupcao " + irpt + "   pc: " + hw.cpu.pc);
+    public void handle(Interrupts irpt, Word ir) {
+        if(ir.opc != Opcode.NOP) {
+            System.out.println(
+            "                                               Interrupcao " + irpt + "   pc: " + hw.cpu.pc);
+        }
         ps.changeProcess();
         
     }
