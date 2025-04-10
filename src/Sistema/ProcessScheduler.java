@@ -30,12 +30,17 @@ public class ProcessScheduler {
     }
 
     public void changeProcess() {
+        if(gp.getProcessQueue().size() == 1) {
+            cpu.setContext(gp.peekProcessInQueue());
+            return;
+        }
+
         System.out.println(gp.getProcessQueue().toString());
         PCB pcb = gp.peekProcessInQueue();
         
         gp.getProcessQueue().remove();
+        cpu.setContext(gp.peekProcessInQueue());
         gp.getProcessQueue().add(pcb);
-        cpu.setContext(pcb);
     }
 
     public synchronized void removeProcess(PCB pcb, boolean debug) {
