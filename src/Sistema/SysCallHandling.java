@@ -1,19 +1,24 @@
 package src.Sistema;
 
+import src.Sistema.GP.PCB;
+
 public class SysCallHandling {
     private HW hw; // referencia ao hw se tiver que setar algo
-    public boolean stop;
+    private ProcessScheduler ps;
 
-    public SysCallHandling(HW _hw) {
+    public SysCallHandling(HW _hw, ProcessScheduler ps) {
         hw = _hw;
+        this.ps = ps;
     }
 
-    public void stop(boolean debug) { // chamada de sistema indicando final de programa
+    public void stop(PCB pcb, boolean debug) { // chamada de sistema indicando final de programa
                          // nesta versao cpu simplesmente pára
-        stop = true;
+        ps.removeProcess(pcb, debug);
         if(debug) {
+
             System.out.println("                                               SYSCALL STOP");
         }
+        ps.changeProcess();
     }
 
     public void handle() { // chamada de sistema

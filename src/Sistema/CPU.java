@@ -29,6 +29,8 @@ public class CPU {
 
     // Aux
     private int tamPg;
+    private int[] tabelaPaginas;
+    private PCB pcb;
 
     public CPU(Memory _mem, boolean _debug) { // ref a MEMORIA passada na criacao da CPU
         maxInt = 32767; // capacidade de representacao modelada
@@ -70,12 +72,14 @@ public class CPU {
         return true;
     }
 
-    public void setContext(int _pc, int[] contextData) { // usado para setar o contexto da cpu para rodar um processo
+    public void setContext(PCB pcb) { // usado para setar o contexto da cpu para rodar um processo
                                       // [ nesta versao é somente colocar o PC na posicao 0 ]
-        for (int i = 0; i < contextData.length; i++) {
-            reg[i] = contextData[i];               
+        this.pcb = pcb;
+        for (int i = 0; i < pcb.contextData.length; i++) {
+            reg[i] = pcb.contextData[i];               
         }
-        pc = _pc; // pc cfe endereco logico
+        this.pc = pcb.pc; // pc cfe endereco logico
+        this.tabelaPaginas = pcb.tabelaPaginas;
         irpt = Interrupts.noInterrupt; // reset da interrupcao registrada
         cpuStop = false;
     }
@@ -88,14 +92,13 @@ public class CPU {
         irpt = interrupts;
     }
 
-    public void run(PCB process) { // execucao da CPU supoe que o contexto da CPU, vide acima,
+    public void run() { // execucao da CPU supoe que o contexto da CPU, vide acima,
         // esta devidamente setado
-        int[] tabelaPaginas = process.tabelaPaginas;
 
         cpuStop = false;
         while (!cpuStop) { // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada
                            // caso.
-
+            if(this.pcb == null) continue;
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
@@ -111,7 +114,7 @@ public class CPU {
                     System.out.println();
                 }
                 if (debug) {
-                    System.out.print("                      pc: " + translatePosition(pc , tabelaPaginas) + "       exec: ");
+                    System.out.print("                      pc: " + translatePosition(this.pc , tabelaPaginas) + "       exec: ");
                     u.dump(ir);
                 }
 
@@ -281,8 +284,8 @@ public class CPU {
                         break;
 
                     case STOP: // por enquanto, para execucao
-                        sysCall.stop(debug);
-                        cpuStop = true;
+                        sysCall.stop(this.pcb ,debug);
+ //                       cpuStop = true;
                         break;
 
                     // Inexistente
@@ -294,12 +297,11 @@ public class CPU {
             // --------------------------------------------------------------------------------------------------
             // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
             if (irpt != Interrupts.noInterrupt) { // existe interrupção1
-                process.pc = pc;
                 for (int i = 0; i < reg.length; i++) {
-                    process.contextData[i] = reg[i]; 
+                    this.pcb.contextData[i] = reg[i]; 
                 }
                 ih.handle(irpt); // desvia para rotina de tratamento - esta rotina é do SO
-                cpuStop = true; // nesta versao, para a CPU
+            //    cpuStop = true; // nesta versao, para a CPU
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }

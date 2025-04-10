@@ -107,8 +107,16 @@ public class GP implements GPInterface {
 
     public void ps() {
         Iterator<PCB> iterator = processesInQueue.iterator();
+        if(!iterator.hasNext()) {
+            System.out.println("List is empty");
+            return;
+        }
         while (iterator.hasNext()) {
             PCB pcb = iterator.next();
+            if(pcb == null) {
+                System.out.println("List is empty");
+                return;
+            }
             System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id,
                     Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
         }

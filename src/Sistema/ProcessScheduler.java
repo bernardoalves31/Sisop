@@ -3,7 +3,7 @@ package src.Sistema;
 import src.Sistema.GP.PCB;
 
 public class ProcessScheduler {
-    private GP gp;
+    public GP gp;
     private CPU cpu;
     private boolean debug;
 
@@ -14,38 +14,36 @@ public class ProcessScheduler {
     }
 
     public void running() {
-        while (true) {
-            PCB currentPcb = gp.peekProcessInQueue();
-            if (currentPcb == null)
-                continue;
+        PCB startPcb = gp.peekProcessInQueue();
 
-            cpu.setContext(currentPcb.pc, currentPcb.contextData);
-            if (!cpu.sysCall.stop) {
-                cpu.run(currentPcb);
-            } else {
-                if(!debug) {
-                    gp.freeProcess(currentPcb.id);
-                }
-                removeProcess(currentPcb);
-                cpu.sysCall.stop = false;
-            }
+        cpu.setContext(startPcb);
+        cpu.run();
+        if (!debug) {
+            gp.freeProcess(startPcb.id);
         }
+        // cpu.sysCall.stop = false;
+
     }
 
     public void interruptTimeOut() {
         cpu.setInterruption(Interrupts.timeOut);
-        changeProcess();
     }
 
     public void changeProcess() {
+        System.out.println(gp.getProcessQueue().toString());
         PCB pcb = gp.peekProcessInQueue();
-
-        removeProcess(pcb);
+        
+        gp.getProcessQueue().remove();
         gp.getProcessQueue().add(pcb);
+        cpu.setContext(pcb);
     }
 
-    public synchronized void removeProcess(PCB pcb) {
-        gp.getProcessQueue().remove(pcb);
+    public synchronized void removeProcess(PCB pcb, boolean debug) {
+        int id = pcb.id;
+        gp.getProcessQueue().remove();
+        if(!debug){
+            gp.freeProcess(id);
+        }
     }
 
     public void setDebug(boolean debug) {
