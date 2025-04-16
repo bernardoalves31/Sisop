@@ -289,6 +289,12 @@ public class Programs {
                             new Word(Opcode.DATA, -1, -1, -1),
                             new Word(Opcode.DATA, -1, -1, -1),
                             new Word(Opcode.DATA, -1, -1, -1)
-                    })
+                    }),
+
+                new Program("NOP",
+                        new Word[] {
+                                new Word(Opcode.NOP, -1, -1, -1),
+                                
+                        })
     };
 }

@@ -44,7 +44,7 @@ public class Utilities {
         loadProgram(p); // carga do programa na memoria
         System.out.println("---------------------------------- programa carregado na memoria");
         dump(0, p.length); // dump da memoria nestas posicoes
-        hw.cpu.setContext(0); // seta pc para endereço 0 - ponto de entrada dos programas
+    //    hw.cpu.setContext(0); // seta pc para endereço 0 - ponto de entrada dos programas
         System.out.println("---------------------------------- inicia execucao ");
     //    hw.cpu.run(); // cpu roda programa ate parar
         System.out.println("---------------------------------- memoria após execucao ");

@@ -6,6 +6,6 @@ public class HW {
 
     public HW(Memory mem) {
         this.mem = mem;
-        cpu = new CPU(mem, true); // true liga debug
+        cpu = new CPU(mem,false); // boolean turns debug
     }
 }

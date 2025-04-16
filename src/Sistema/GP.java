@@ -11,20 +11,21 @@ public class GP implements GPInterface {
     private int countIds;
     private Queue<PCB> processesInQueue;
 
-    private class PCB {
+    public class PCB {
         Program[] programs;
         int[] tabelaPaginas;
         int id;
         int priority;
         int pc;
         String status;
-        String contextData;
+        int[] contextData;
 
         public PCB(int[] tabelaPaginas) {
             this.tabelaPaginas = tabelaPaginas;
             this.id = countIds++;
             this.pc = 0;
             this.priority = 0;
+            this.contextData = new int[10];
         }
     }
 
@@ -32,11 +33,10 @@ public class GP implements GPInterface {
         this.so = so;
         this.hw = hw;
         this.countIds = 0;
-        this.processesInQueue = new LinkedList<PCB>(); 
+        this.processesInQueue = new LinkedList<PCB>();
     }
 
     public boolean createProcess(Word[] programImage, int[] tabelaPaginas) {
-
 
         if (!so.gm.canAlloc(programImage.length, tabelaPaginas)) {
             return false;
@@ -58,7 +58,7 @@ public class GP implements GPInterface {
         Iterator<PCB> iterator = processesInQueue.iterator();
         while (iterator.hasNext()) {
             removeItem = iterator.next(); // Remove item from queue
-            if(removeItem.id == id) {
+            if (removeItem.id == id) {
                 iterator.remove();
                 so.gm.free(removeItem.tabelaPaginas); // Remove item from memory
                 return true;
@@ -69,18 +69,19 @@ public class GP implements GPInterface {
 
     public void listProcess(int id) {
         PCB pcb = getProcess(id);
-        if(pcb == null) {
+        if (pcb == null) {
             System.out.println("Invalid process id");
             return;
         }
-        System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id , Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
+        System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id,
+                Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
         for (int i = 0; i < pcb.tabelaPaginas.length; i++) {
             int page = pcb.tabelaPaginas[i];
             for (int j = 0; j < hw.mem.getTamPg(); j++) {
                 int posMem = hw.mem.calculatePage(page) + j;
                 Word w = hw.mem.pos[posMem];
                 System.out.print("Page: " + page);
-                System.out.print(" Position: "+ posMem);
+                System.out.print(" Position: " + posMem);
                 System.out.print(" [ ");
                 System.out.print(w.opc);
                 System.out.print(", ");
@@ -96,28 +97,36 @@ public class GP implements GPInterface {
 
     public PCB getProcess(int id) {
         Iterator<PCB> iterator = processesInQueue.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             PCB pcb = iterator.next();
-            if(pcb.id == id) return pcb;
+            if (pcb.id == id)
+                return pcb;
         }
         return null;
     }
 
     public void ps() {
         Iterator<PCB> iterator = processesInQueue.iterator();
-        while(iterator.hasNext()) {
+        if(!iterator.hasNext()) {
+            System.out.println("List is empty");
+            return;
+        }
+        while (iterator.hasNext()) {
             PCB pcb = iterator.next();
-            System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id , Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
+            if(pcb == null) {
+                System.out.println("List is empty");
+                return;
+            }
+            System.out.printf("Process id: %d  pages: %s  priority: %d  pc: %d  status: %s\n", pcb.id,
+                    Arrays.toString(pcb.tabelaPaginas), pcb.priority, pcb.pc, pcb.status);
         }
     }
 
-    public PCB peekProcessInQueue() {
+    public synchronized PCB peekProcessInQueue() {
         return processesInQueue.peek();
     }
 
     public Queue<PCB> getProcessQueue() {
-        Queue<PCB> aux = this.processesInQueue;
-        aux.remove();
-        return aux;
+        return processesInQueue;
     }
 }
