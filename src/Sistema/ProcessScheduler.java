@@ -35,7 +35,7 @@ public class ProcessScheduler {
             return;
         }
 
-        System.out.println(gp.getProcessQueue().toString());
+    //    System.out.println(gp.getProcessQueue().toString());
         PCB pcb = gp.peekProcessInQueue();
         
         gp.getProcessQueue().remove();

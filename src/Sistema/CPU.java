@@ -53,14 +53,14 @@ public class CPU {
     }
 
     // verificação de enderecamento
-    private boolean legal(int e) { // todo acesso a memoria tem que ser verificado se é válido -
-                                   // aqui no caso se o endereco é um endereco valido em toda memoria
-        if (e >= 0 && e < m.length) {
-            return true;
-        } else {
-            irpt = Interrupts.intEnderecoInvalido; // se nao for liga interrupcao no meio da exec da instrucao
+    private boolean legal(int e) { 
+        try {
+            translatePosition(e, tabelaPaginas);
+        } catch (Exception a) {
+            setInterruption(Interrupts.intEnderecoInvalido);
             return false;
         }
+        return true;
     }
 
     private boolean testOverflow(int v) { // toda operacao matematica deve avaliar se ocorre overflow
@@ -284,8 +284,11 @@ public class CPU {
                         break;
 
                     case STOP: // por enquanto, para execucao
-                        sysCall.stop(this.pcb ,debug);
+                        sysCall.stop(this.pcb, debug);
  //                       cpuStop = true;
+                        break;
+
+                    case NOP:
                         break;
 
                     // Inexistente
@@ -297,12 +300,17 @@ public class CPU {
             // --------------------------------------------------------------------------------------------------
             // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
             if (irpt != Interrupts.noInterrupt) { // existe interrupção1
-                for (int i = 0; i < reg.length; i++) {
-                    this.pcb.contextData[i] = reg[i]; 
+                if(irpt == Interrupts.timeOut) {
+                    for (int i = 0; i < reg.length; i++) {
+                        this.pcb.contextData[i] = reg[i]; 
+                    }
+                    pcb.pc = pc;
+                    ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
                 }
-                pcb.pc = pc;
-                ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
-            //    cpuStop = true; // nesta versao, para a CPU
+                else{
+                    sysCall.stop(this.pcb ,debug);
+                }
+                    //    cpuStop = true; // nesta versao, para a CPU
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }
