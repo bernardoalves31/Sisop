@@ -19,10 +19,8 @@ public class ProcessScheduler {
         cpu.setContext(startPcb);
         cpu.run();
         if (!debug) {
-            gp.freeProcess(startPcb.id);
+            gp.freeProcess(startPcb);
         }
-        // cpu.sysCall.stop = false;
-
     }
 
     public void interruptTimeOut() {
@@ -30,27 +28,17 @@ public class ProcessScheduler {
     }
 
     public void changeProcess() {
-        if(gp.getProcessQueue().size() == 1) {
-            cpu.setContext(gp.peekProcessInQueue());
-            return;
-        }
-
-    //    System.out.println(gp.getProcessQueue().toString());
-        PCB pcb = gp.peekProcessInQueue();
-        
-        gp.getProcessQueue().remove();
-        cpu.setContext(gp.peekProcessInQueue());
+        PCB pcb = cpu.getPCB();
         gp.getProcessQueue().add(pcb);
+        cpu.setContext(gp.getProcessQueue().remove());
     }
 
     public synchronized void removeProcess(PCB pcb, boolean debug) {
-        int id = pcb.id;
-        if(!debug){
-            gp.freeProcess(id);
+        if (!debug) {
+            gp.freeProcess(pcb);
         }
-        else{
-            gp.getProcessQueue().remove();
-        }
+
+        cpu.setContext(gp.getProcessQueue().remove());
     }
 
     public void setDebug(boolean debug) {

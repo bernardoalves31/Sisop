@@ -29,7 +29,7 @@ public class CPU {
 
     // Aux
     private int tamPg;
-    private int[] tabelaPaginas;
+    public int[] tabelaPaginas;
     private PCB pcb;
 
     public CPU(Memory _mem, boolean _debug) { // ref a MEMORIA passada na criacao da CPU
@@ -82,6 +82,10 @@ public class CPU {
         this.tabelaPaginas = pcb.tabelaPaginas;
         irpt = Interrupts.noInterrupt; // reset da interrupcao registrada
         cpuStop = false;
+    }
+
+    public PCB getPCB() {
+        return this.pcb;
     }
 
     public void setDebug(boolean _debug) {

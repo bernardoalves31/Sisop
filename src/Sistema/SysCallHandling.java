@@ -18,7 +18,6 @@ public class SysCallHandling {
 
             System.out.println("                                               SYSCALL STOP");
         }
-        ps.changeProcess();
     }
 
     public void handle() { // chamada de sistema

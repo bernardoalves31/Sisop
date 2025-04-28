@@ -2,6 +2,8 @@ package src.Sistema;
 
 import java.util.Scanner;
 
+import src.Sistema.GP.PCB;
+
 public class Sistema {
 	public HW hw;
 	public SO so;
@@ -134,9 +136,12 @@ public class Sistema {
 					System.out.println("Insert Id to remove");
 					String input = scanner.next();
 					int id = Integer.parseInt(input);
-					if (!so.gp.freeProcess(id)) {
+					PCB pcb = so.gp.getProcess(id);
+					if (so.gp.getProcess(id) == null) {
 						System.out.println("Invalid id process");
+						break;
 					}
+					so.gp.freeProcess(pcb);
 					System.out.println("Process removed sucessfully");
 					break;
 

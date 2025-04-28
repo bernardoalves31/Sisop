@@ -53,18 +53,9 @@ public class GP implements GPInterface {
         return Math.ceilDiv(programImage.length, hw.mem.getTamPg());
     }
 
-    public boolean freeProcess(int id) {
-        PCB removeItem = null;
-        Iterator<PCB> iterator = processesInQueue.iterator();
-        while (iterator.hasNext()) {
-            removeItem = iterator.next(); // Remove item from queue
-            if (removeItem.id == id) {
-                iterator.remove();
-                so.gm.free(removeItem.tabelaPaginas); // Remove item from memory
-                return true;
-            }
-        }
-        return false;
+    public void freeProcess(PCB pcb) {
+        so.gm.free(pcb.tabelaPaginas); // Remove item from memory
+        processesInQueue.remove(pcb); // Remove from queue
     }
 
     public void listProcess(int id) {
