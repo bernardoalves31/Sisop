@@ -19,10 +19,6 @@ public class CPU {
     private InterruptHandling ih; // significa desvio para rotinas de tratamento de Int - se int ligada, desvia
     public SysCallHandling sysCall; // significa desvio para tratamento de chamadas de sistema
 
-    public boolean cpuStop; // flag para parar CPU - caso de interrupcao que acaba o processo, ou chamada
-                            // stop -
-                            // nesta versao acaba o sistema no fim do prog
-
     // auxilio aa depuração
     private boolean debug; // se true entao mostra cada instrucao em execucao
     private Utilities u; // para debug (dump)
@@ -81,7 +77,6 @@ public class CPU {
         this.pc = pcb.pc; // pc cfe endereco logico
         this.tabelaPaginas = pcb.tabelaPaginas;
         irpt = Interrupts.noInterrupt; // reset da interrupcao registrada
-        cpuStop = false;
     }
 
     public PCB getPCB() {
@@ -99,8 +94,7 @@ public class CPU {
     public void run() { // execucao da CPU supoe que o contexto da CPU, vide acima,
         // esta devidamente setado
 
-        cpuStop = false;
-        while (!cpuStop) { // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada
+        while (true) { // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada
                            // caso.
             if(this.pcb == null) continue;
             // --------------------------------------------------------------------------------------------------
@@ -289,7 +283,6 @@ public class CPU {
 
                     case STOP: // por enquanto, para execucao
                         sysCall.stop(this.pcb, debug);
- //                       cpuStop = true;
                         break;
 
                     case NOP:
@@ -314,7 +307,6 @@ public class CPU {
                 else{
                     sysCall.stop(this.pcb ,debug);
                 }
-                    //    cpuStop = true; // nesta versao, para a CPU
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }
