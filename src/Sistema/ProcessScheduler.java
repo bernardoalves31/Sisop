@@ -29,8 +29,11 @@ public class ProcessScheduler {
 
     public void changeProcess() {
         PCB pcb = cpu.getPCB();
+        pcb.status = ProcessStates.READY;
         gp.getProcessQueue().add(pcb);
-        cpu.setContext(gp.getProcessQueue().remove());
+        PCB nextRunningPCB = gp.getProcessQueue().remove();
+        nextRunningPCB.status = ProcessStates.RUNNING;
+        cpu.setContext(nextRunningPCB);
     }
 
     public synchronized void removeProcess(PCB pcb, boolean debug) {

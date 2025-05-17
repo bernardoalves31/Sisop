@@ -1,5 +1,6 @@
 package src.Sistema;
 
+import src.Sistema.ProcessStates;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -17,7 +18,7 @@ public class GP implements GPInterface {
         int id;
         int priority;
         int pc;
-        String status;
+        ProcessStates status;
         int[] contextData;
 
         public PCB(int[] tabelaPaginas) {
@@ -25,6 +26,7 @@ public class GP implements GPInterface {
             this.id = countIds++;
             this.pc = 0;
             this.priority = 0;
+            this.status = ProcessStates.READY;
             this.contextData = new int[10];
         }
     }
