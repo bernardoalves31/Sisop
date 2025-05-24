@@ -27,10 +27,22 @@ public class SysCallHandling {
 
         if (hw.cpu.reg[8] == 1) {
             // leitura ...
+            for (int i = 0; i < hw.cpu.reg.length; i++) {
+                hw.cpu.getPCB().contextData[i] = hw.cpu.reg[i]; 
+            }
+            hw.cpu.getPCB().pc = ++hw.cpu.pc;
+
+
+            hw.device.setMemoryWritePosition(hw.cpu.translatePosition(hw.cpu.reg[9], hw.cpu.tabelaPaginas)); // Sends translated position
+            hw.device.mutexShell = true;
+            System.out.println("Program input: ");
+            hw.cpu.getPCB().status = ProcessStates.BLOCKED;
+            ps.changeProcess();
 
         } else if (hw.cpu.reg[8] == 2) {
             // escrita - escreve o conteuodo da memoria na posicao dada em reg[9]
             System.out.println("OUT:   " + hw.mem.pos[hw.cpu.reg[9]].p);
+            hw.cpu.pc++;
         } else {
             System.out.println("  PARAMETRO INVALIDO");
         }

@@ -11,6 +11,7 @@ public class GP implements GPInterface {
     private SO so;
     private int countIds;
     private Queue<PCB> processesInQueue;
+    private Queue<PCB> processBlockedInQueue;
 
     public class PCB {
         Program[] programs;
@@ -36,6 +37,7 @@ public class GP implements GPInterface {
         this.hw = hw;
         this.countIds = 0;
         this.processesInQueue = new LinkedList<PCB>();
+        this.processBlockedInQueue = new LinkedList<PCB>();
     }
 
     public boolean createProcess(Word[] programImage, int[] tabelaPaginas) {
@@ -49,6 +51,12 @@ public class GP implements GPInterface {
         processesInQueue.add(pcb);
 
         return true;
+    }
+
+    public void removeBlockedProcess() { 
+        PCB pcb = this.processBlockedInQueue.remove();
+        pcb.status = ProcessStates.READY;
+        this.processesInQueue.add(pcb);
     }
 
     public int calcNumPages(Word[] programImage) {
@@ -121,5 +129,13 @@ public class GP implements GPInterface {
 
     public Queue<PCB> getProcessQueue() {
         return processesInQueue;
+    }
+
+    public synchronized PCB peekBlockedProcessInQueue() {
+        return processesInQueue.peek();
+    }
+
+    public Queue<PCB> getBlockedProcessQueue() {
+        return processBlockedInQueue;
     }
 }

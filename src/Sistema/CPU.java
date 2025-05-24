@@ -10,6 +10,7 @@ public class CPU {
     private Word ir; // instruction register,
     int[] reg; // registradores da CPU
     private Interrupts irpt; // durante instrucao, interrupcao pode ser sinalizada
+    public boolean iOInterrrupt;
     // FIM CONTEXTO DA CPU: tudo que precisa sobre o estado de um processo para
     // executa-lo
     // nas proximas versoes isto pode modificar
@@ -36,6 +37,7 @@ public class CPU {
         reg = new int[10]; // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
 
         debug = _debug; // se true, print da instrucao em execucao
+        iOInterrrupt = false;
 
     }
 
@@ -274,11 +276,12 @@ public class CPU {
 
                     // Chamadas de sistema
                     case SYSCALL:
-                        if(debug) {
-                            sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
-                        }
-                                          // temos IO
-                        pc++;
+                        
+                        sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
+                        
+                        // else{
+                        //     pc++;
+                        // }                  // temos IO
                         break;
 
                     case STOP: // por enquanto, para execucao
@@ -307,6 +310,9 @@ public class CPU {
                 else{
                     sysCall.stop(this.pcb ,debug);
                 }
+            }
+            if(iOInterrrupt) {
+                ih.handle(irpt, ir);
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }

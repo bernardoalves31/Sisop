@@ -29,8 +29,13 @@ public class ProcessScheduler {
 
     public void changeProcess() {
         PCB pcb = cpu.getPCB();
-        pcb.status = ProcessStates.READY;
-        gp.getProcessQueue().add(pcb);
+        if(pcb.status == ProcessStates.BLOCKED) {
+            gp.getBlockedProcessQueue().add(pcb);
+        }
+        else{
+            pcb.status = ProcessStates.READY;
+            gp.getProcessQueue().add(pcb);
+        }
         PCB nextRunningPCB = gp.getProcessQueue().remove();
         nextRunningPCB.status = ProcessStates.RUNNING;
         cpu.setContext(nextRunningPCB);

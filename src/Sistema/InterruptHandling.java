@@ -14,6 +14,12 @@ public class InterruptHandling {
             System.out.println(
             "                                               Interrupcao " + irpt + "   pc: " + hw.cpu.translatePosition(hw.cpu.pc, hw.cpu.tabelaPaginas));
         }
+        if(hw.cpu.iOInterrrupt == true) {
+            ps.gp.removeBlockedProcess();
+            hw.cpu.iOInterrrupt = false;
+            return;
+        }
+
         ps.changeProcess();
         
     }

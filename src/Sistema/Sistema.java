@@ -50,7 +50,12 @@ public class Sistema {
 			System.out.println("0 - Exit");
 			System.out.println("---------------------------");
 
-			option = scanner.next();
+			option = scanner.next(); // System takes the user input
+			if (hw.device.mutexShell) { // If device wants to take the input
+				hw.device.setUserInput(option);
+				option = scanner.next(); // Shell takes the control again
+			}
+
 			switch (option) {
 				case "1":
 					System.out.println("Programs list:");
@@ -64,7 +69,12 @@ public class Sistema {
 					System.out.println("8 - PC");
 					System.out.println("0 - back");
 
-					option = scanner.next();
+					option = scanner.next(); // System takes the user input
+					if (hw.device.mutexShell) { // If device wants to take the input
+						hw.device.setUserInput(option); 
+						hw.device.mutexShell = false;
+						option = scanner.next(); // Shell takes the control again
+					}
 
 					switch (option) {
 						case "1":
@@ -218,6 +228,14 @@ public class Sistema {
 			}
 		});
 		timerThread.start();
+
+		Thread deviceThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				hw.device.run();
+			}
+		});
+		deviceThread.start();
 	}
 
 	public static void main(String args[]) {
