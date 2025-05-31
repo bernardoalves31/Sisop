@@ -14,7 +14,7 @@ public class Sistema {
 		// memoria do HW tem tamMem palavras
 		so = new SO(hw);
 		hw.cpu.setUtilities(so.utils); // permite cpu fazer dump de memoria ao avancar
-		progs = new Programs();
+		progs = new Programs(mem.getTamPg());
 	}
 
 	public void run() {
@@ -78,8 +78,8 @@ public class Sistema {
 
 					switch (option) {
 						case "1":
-							int[] tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fatorial"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("fatorial"), tabelaPaginas)) {
+							int[] tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgramPage("fatorial", 0))];
+							if (!so.gp.createProcess(progs.retrieveProgramPage("fatorial",0), tabelaPaginas)) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");

@@ -1,6 +1,14 @@
 package src.Sistema;
+import java.util.Arrays;
 
 public class Programs {
+     
+        private final int tamPg;
+
+
+    public Programs(int tamPg) {
+        this.tamPg = tamPg;
+    }
 
     public Word[] retrieveProgram(String pname) {
         for (Program p : progs) {
@@ -10,66 +18,82 @@ public class Programs {
         return null;
     }
 
+    public Word[] retrieveProgramPage(String pname, int page) {
+        for (Program p : progs) {
+            if (p != null & p.name == pname) {
+                int start = page * tamPg;
+                int end = start + tamPg;
+
+                if (end <= p.image.length) {
+                    return Arrays.copyOfRange(p.image, start, end);
+                } else {
+                    return Arrays.copyOfRange(p.image, start, p.image.length);
+                }
+            }
+        }
+        return null;
+    }
+
     public Program[] progs = {
-            new Program("fatorial",
-                    new Word[] {
-                            // este fatorial so aceita valores positivos. nao pode ser zero
-                            // linha coment
-                            new Word(Opcode.LDI, 0, -1, 7), // 0 r0 é valor a calcular fatorial
-                            new Word(Opcode.LDI, 1, -1, 1), // 1 r1 é 1 para multiplicar (por r0)
-                            new Word(Opcode.LDI, 6, -1, 1), // 2 r6 é 1 o decremento
-                            new Word(Opcode.LDI, 7, -1, 8), // 3 r7 tem posicao 8 para fim do programa
-                            new Word(Opcode.JMPIE, 7, 0, 0), // 4 se r0=0 pula para r7(=8)
-                            new Word(Opcode.MULT, 1, 0, -1), // 5 r1 = r1 * r0 (r1 acumula o produto por cada termo)
-                            new Word(Opcode.SUB, 0, 6, -1), // 6 r0 = r0 - r6 (r6=1) decrementa r0 para proximo
-                                                            // termo
-                            new Word(Opcode.JMP, -1, -1, 4), // 7 vai p posicao 4
-                            new Word(Opcode.STD, 1, -1, 10), // 8 coloca valor de r1 na posição 10
-                            new Word(Opcode.STOP, -1, -1, -1), // 9 stop
-                            new Word(Opcode.DATA, -1, -1, -1) // 10 ao final o valor está na posição 10 da memória
-                    }),
+        new Program("fatorial",
+            new Word[] {
+                // este fatorial so aceita valores positivos. nao pode ser zero
+                // linha coment
+                new Word(Opcode.LDI, 0, -1, 7), // 0 r0 é valor a calcular fatorial
+                new Word(Opcode.LDI, 1, -1, 1), // 1 r1 é 1 para multiplicar (por r0)
+                new Word(Opcode.LDI, 6, -1, 1), // 2 r6 é 1 o decremento
+                new Word(Opcode.LDI, 7, -1, 8), // 3 r7 tem posicao 8 para fim do programa
+                new Word(Opcode.JMPIE, 7, 0, 0), // 4 se r0=0 pula para r7(=8)
+                new Word(Opcode.MULT, 1, 0, -1), // 5 r1 = r1 * r0 (r1 acumula o produto por cada termo)
+                new Word(Opcode.SUB, 0, 6, -1), // 6 r0 = r0 - r6 (r6=1) decrementa r0 para proximo
+                                                // termo
+                new Word(Opcode.JMP, -1, -1, 4), // 7 vai p posicao 4
+                new Word(Opcode.STD, 1, -1, 10), // 8 coloca valor de r1 na posição 10
+                new Word(Opcode.STOP, -1, -1, -1), // 9 stop
+                new Word(Opcode.DATA, -1, -1, -1) // 10 ao final o valor está na posição 10 da memória
+            }),
 
             new Program("fatorialV2",
-                    new Word[] {
-                            new Word(Opcode.LDI, 0, -1, 5), // numero para colocar na memoria, ou pode ser lido
-                            new Word(Opcode.STD, 0, -1, 19),
-                            new Word(Opcode.LDD, 0, -1, 19),
-                            new Word(Opcode.LDI, 1, -1, -1),
-                            new Word(Opcode.LDI, 2, -1, 13), // SALVAR POS STOP
-                            new Word(Opcode.JMPIL, 2, 0, -1), // caso negativo pula pro STD
-                            new Word(Opcode.LDI, 1, -1, 1),
-                            new Word(Opcode.LDI, 6, -1, 1),
-                            new Word(Opcode.LDI, 7, -1, 13),
-                            new Word(Opcode.JMPIE, 7, 0, 0), // POS 9 pula para STD (Stop-1)
-                            new Word(Opcode.MULT, 1, 0, -1),
-                            new Word(Opcode.SUB, 0, 6, -1),
-                            new Word(Opcode.JMP, -1, -1, 9), // pula para o JMPIE
-                            new Word(Opcode.STD, 1, -1, 18),
-                            new Word(Opcode.LDI, 8, -1, 2), // escrita
-                            new Word(Opcode.LDI, 9, -1, 18), // endereco com valor a escrever
-                            new Word(Opcode.SYSCALL, -1, -1, -1),
-                            new Word(Opcode.STOP, -1, -1, -1), // POS 17
-                            new Word(Opcode.DATA, -1, -1, -1), // POS 18
-                            new Word(Opcode.DATA, -1, -1, -1) } // POS 19
+                new Word[] {
+                    new Word(Opcode.LDI, 0, -1, 5), // numero para colocar na memoria, ou pode ser lido
+                    new Word(Opcode.STD, 0, -1, 19),
+                    new Word(Opcode.LDD, 0, -1, 19),
+                    new Word(Opcode.LDI, 1, -1, -1),
+                    new Word(Opcode.LDI, 2, -1, 13), // SALVAR POS STOP
+                    new Word(Opcode.JMPIL, 2, 0, -1), // caso negativo pula pro STD
+                    new Word(Opcode.LDI, 1, -1, 1),
+                    new Word(Opcode.LDI, 6, -1, 1),
+                    new Word(Opcode.LDI, 7, -1, 13),
+                    new Word(Opcode.JMPIE, 7, 0, 0), // POS 9 pula para STD (Stop-1)
+                    new Word(Opcode.MULT, 1, 0, -1),
+                    new Word(Opcode.SUB, 0, 6, -1),
+                    new Word(Opcode.JMP, -1, -1, 9), // pula para o JMPIE
+                    new Word(Opcode.STD, 1, -1, 18),
+                    new Word(Opcode.LDI, 8, -1, 2), // escrita
+                    new Word(Opcode.LDI, 9, -1, 18), // endereco com valor a escrever
+                    new Word(Opcode.SYSCALL, -1, -1, -1),
+                    new Word(Opcode.STOP, -1, -1, -1), // POS 17
+                    new Word(Opcode.DATA, -1, -1, -1), // POS 18
+                    new Word(Opcode.DATA, -1, -1, -1) } // POS 19
             ),
 
             new Program("progMinimo",
-                    new Word[] {
-                            new Word(Opcode.LDI, 0, -1, 999),
-                            new Word(Opcode.STD, 0, -1, 8),
-                            new Word(Opcode.STD, 0, -1, 9),
-                            new Word(Opcode.STD, 0, -1, 10),
-                            new Word(Opcode.STD, 0, -1, 11),
-                            new Word(Opcode.STD, 0, -1, 12),
-                            new Word(Opcode.STOP, -1, -1, -1),
-                            new Word(Opcode.DATA, -1, -1, -1), // 7
-                            new Word(Opcode.DATA, -1, -1, -1), // 8
-                            new Word(Opcode.DATA, -1, -1, -1), // 9
-                            new Word(Opcode.DATA, -1, -1, -1), // 10
-                            new Word(Opcode.DATA, -1, -1, -1), // 11
-                            new Word(Opcode.DATA, -1, -1, -1), // 12
-                            new Word(Opcode.DATA, -1, -1, -1) // 13
-                    }),
+                new Word[] {
+                    new Word(Opcode.LDI, 0, -1, 999),
+                    new Word(Opcode.STD, 0, -1, 8),
+                    new Word(Opcode.STD, 0, -1, 9),
+                    new Word(Opcode.STD, 0, -1, 10),
+                    new Word(Opcode.STD, 0, -1, 11),
+                    new Word(Opcode.STD, 0, -1, 12),
+                    new Word(Opcode.STOP, -1, -1, -1),
+                    new Word(Opcode.DATA, -1, -1, -1), // 7
+                    new Word(Opcode.DATA, -1, -1, -1), // 8
+                    new Word(Opcode.DATA, -1, -1, -1), // 9
+                    new Word(Opcode.DATA, -1, -1, -1), // 10
+                    new Word(Opcode.DATA, -1, -1, -1), // 11
+                    new Word(Opcode.DATA, -1, -1, -1), // 12
+                    new Word(Opcode.DATA, -1, -1, -1) // 13
+                }),
 
             new Program("fibonacci10",
                     new Word[] { // mesmo que prog exemplo, so que usa r0 no lugar de r8
