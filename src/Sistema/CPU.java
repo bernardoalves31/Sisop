@@ -11,10 +11,8 @@ public class CPU {
     // CONTEXTO da CPU ...
     int pc; // ... composto de program counter,
     private Word ir; // instruction register,
-    int[] reg; // registradores da CPU
-    private Queue<Interrupts> interruptsQueue; 
-    public Interrupts irpt; // durante instrucao, interrupcao pode ser sinalizada
-    public boolean ioInterrupt;
+    int[] reg; // registradores da CPU 
+    public Interrupts[] irpt; // durante instrucao, interrupcao pode ser sinalizada
     // FIM CONTEXTO DA CPU: tudo que precisa sobre o estado de um processo para
     // executa-lo
     // nas proximas versoes isto pode modificar
@@ -41,7 +39,11 @@ public class CPU {
         reg = new int[10]; // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
 
         debug = _debug; // se true, print da instrucao em execucao
-        ioInterrupt = false;
+        irpt = new Interrupts[10]; // vetor de interrupcoes, 10 posicoes
+
+        for (int i = 0; i < irpt.length; i++) {
+            irpt[i] = Interrupts.noInterrupt; 
+        }
 
     }
 
@@ -59,7 +61,7 @@ public class CPU {
         try {
             translatePosition(e);
         } catch (Exception a) {
-            setInterruption(Interrupts.intEnderecoInvalido);
+            setInterruption(Interrupts.intEnderecoInvalido, 9);
             return false;
         }
         return true;
@@ -67,7 +69,7 @@ public class CPU {
 
     private boolean testOverflow(int v) { // toda operacao matematica deve avaliar se ocorre overflow
         if ((v < minInt) || (v > maxInt)) {
-            irpt = Interrupts.intOverflow; // se houver liga interrupcao no meio da exec da instrucao
+            irpt[0] = Interrupts.intOverflow; // se houver liga interrupcao no meio da exec da instrucao
             return false;
         }
         ;
@@ -82,7 +84,7 @@ public class CPU {
         }
         this.pc = pcb.pc; // pc cfe endereco logico
         this.tabelaPaginas = pcb.tabelaPaginas;
-        irpt = Interrupts.noInterrupt; // reset da interrupcao registrada
+        irpt[10] = Interrupts.noInterrupt; // reset da interrupcao de troca de processo
     }
 
     public PCB getPCB() {
@@ -93,16 +95,8 @@ public class CPU {
         debug = _debug;
     }
 
-    public void setInterruption(Interrupts interrupts) {
-        interruptsQueue.add(interrupts);
-    }
-
-    public void setNextInterruption() {
-        if (interruptsQueue.isEmpty()) {
-            this.irpt = Interrupts.noInterrupt;
-            return;
-        }
-        this.irpt = interruptsQueue.remove();
+    public void setInterruption(Interrupts interrupts, int index) {
+        irpt[index] = interrupts;
     }
 
     public void run() { // execucao da CPU supoe que o contexto da CPU, vide acima,
@@ -114,230 +108,274 @@ public class CPU {
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
-                ir = m[translatePosition(pc)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
-                                               // pc, guarda em ir
-                // resto é dump de debug
-                if (debug && ir.opc != Opcode.NOP) {
-                    System.out.print("                                              regs: ");
-                    for (int i = 0; i < 10; i++) {
-                        System.out.print(" r[" + i + "]:" + reg[i]);
-                    }
-                    ;
-                    System.out.println();
-                }
-                if (debug && ir.opc != Opcode.NOP) {
-                    System.out.print("                      pc: " + translatePosition(this.pc) + "       exec: ");
-                    u.dump(ir);
-                }
-
-                // --------------------------------------------------------------------------------------------------
-                // FASE DE EXECUCAO DA INSTRUCAO CARREGADA NO ir
-                switch (ir.opc) { // conforme o opcode (código de operação) executa
-
-                    // Instrucoes de Busca e Armazenamento em Memoria
-                    case LDI: // Rd ← k veja a tabela de instrucoes do HW simulado para entender a semantica
-                              // da instrucao
-                        reg[ir.ra] = ir.p;
-                        pc++;
-                        break;
-                    case LDD: // Rd <- [A]
-                        if (legal(ir.p)) {
-                            reg[ir.ra] = m[translatePosition(ir.p)].p;
-                            pc++;
-                        }
-                        break;
-                    case LDX: // RD <- [RS] // NOVA
-                        if (legal(reg[ir.rb])) {
-                            reg[ir.ra] = m[translatePosition(reg[ir.rb])].p;
-                            pc++;
-                        }
-                        break;
-                    case STD: // [A] ← Rs
-                        if (legal(ir.p)) {
-                            m[translatePosition(ir.p)].opc = Opcode.DATA;
-                            m[translatePosition(ir.p)].p = reg[ir.ra];
-                            pc++;
-                            if (debug) {
-                                System.out.print("                                  ");
-                                u.dump(translatePosition(ir.p), translatePosition(ir.p) + 1);
-                            }
-                        }
-                        break;
-                    case STX: // [Rd] ←Rs
-                        if (legal(reg[ir.ra])) {
-                            m[translatePosition(reg[ir.ra])].opc = Opcode.DATA;
-                            m[translatePosition(reg[ir.ra])].p = reg[ir.rb];
-                            pc++;
+                try {
+                    ir = m[translatePosition(pc)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
+                                                // pc, guarda em ir
+                    // resto é dump de debug
+                    if (debug && ir.opc != Opcode.NOP) {
+                        System.out.print("                                              regs: ");
+                        for (int i = 0; i < 10; i++) {
+                            System.out.print(" r[" + i + "]:" + reg[i]);
                         }
                         ;
-                        break;
-                    case MOVE: // RD <- RS
-                        reg[ir.ra] = reg[ir.rb];
-                        pc++;
-                        break;
-                    // Instrucoes Aritmeticas
-                    case ADD: // Rd ← Rd + Rs
-                        reg[ir.ra] = reg[ir.ra] + reg[ir.rb];
-                        testOverflow(reg[ir.ra]);
-                        pc++;
-                        break;
-                    case ADDI: // Rd ← Rd + k
-                        reg[ir.ra] = reg[ir.ra] + ir.p;
-                        testOverflow(reg[ir.ra]);
-                        pc++;
-                        break;
-                    case SUB: // Rd ← Rd - Rs
-                        reg[ir.ra] = reg[ir.ra] - reg[ir.rb];
-                        testOverflow(reg[ir.ra]);
-                        pc++;
-                        break;
-                    case SUBI: // RD <- RD - k // NOVA
-                        reg[ir.ra] = reg[ir.ra] - ir.p;
-                        testOverflow(reg[ir.ra]);
-                        pc++;
-                        break;
-                    case MULT: // Rd <- Rd * Rs
-                        reg[ir.ra] = reg[ir.ra] * reg[ir.rb];
-                        testOverflow(reg[ir.ra]);
-                        pc++;
-                        break;
+                        System.out.println();
+                    }
+                    if (debug && ir.opc != Opcode.NOP) {
+                        System.out.print("                      pc: " + translatePosition(this.pc) + "       exec: ");
+                        u.dump(ir);
+                    }
 
-                    // Instrucoes JUMP
-                    case JMP: // PC <- k
-                        pc = ir.p;
-                        break;
-                    case JMPIM: // PC <- [A]
-                        pc = m[translatePosition(ir.p)].p;
-                        break;
-                    case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
-                        if (reg[ir.rb] > 0) {
-                            pc = reg[ir.ra];
-                        } else {
+                    // --------------------------------------------------------------------------------------------------
+                    // FASE DE EXECUCAO DA INSTRUCAO CARREGADA NO ir
+                
+                    switch (ir.opc) { // conforme o opcode (código de operação) executa
+                        // Instrucoes de Busca e Armazenamento em Memoria
+                        case LDI: // Rd ← k veja a tabela de instrucoes do HW simulado para entender a semantica
+                            // da instrucao
+                            reg[ir.ra] = ir.p;
                             pc++;
-                        }
-                        break;
-                    case JMPIGK: // If RC > 0 then PC <- k else PC++
-                        if (reg[ir.rb] > 0) {
+                            break;
+
+                        case LDD: // Rd <- [A]
+                            if (legal(ir.p)) {
+                                reg[ir.ra] = m[translatePosition(ir.p)].p;
+                                pc++;
+                            }
+                            break;
+
+                        case LDX: // RD <- [RS] // NOVA
+                            if (legal(reg[ir.rb])) {
+                                reg[ir.ra] = m[translatePosition(reg[ir.rb])].p;
+                                pc++;
+                            }
+                            break;
+
+                        case STD: // [A] ← Rs
+                            if (legal(ir.p)) {
+                                m[translatePosition(ir.p)].opc = Opcode.DATA;
+                                m[translatePosition(ir.p)].p = reg[ir.ra];
+                                pc++;
+                                if (debug) {
+                                    System.out.print("                                  ");
+                                    u.dump(translatePosition(ir.p), translatePosition(ir.p) + 1);
+                                }
+                            }
+                            break;
+
+                        case STX: // [Rd] ←Rs
+                            if (legal(reg[ir.ra])) {
+                                m[translatePosition(reg[ir.ra])].opc = Opcode.DATA;
+                                m[translatePosition(reg[ir.ra])].p = reg[ir.rb];
+                                pc++;
+                            }
+                            break;
+
+                        case MOVE: // RD <- RS
+                            reg[ir.ra] = reg[ir.rb];
+                            pc++;
+                            break;
+                        
+                            // Instrucoes Aritmeticas
+                        case ADD: // Rd ← Rd + Rs
+                            reg[ir.ra] = reg[ir.ra] + reg[ir.rb];
+                            testOverflow(reg[ir.ra]);
+                            pc++;
+                            break;
+                            
+                        case ADDI: // Rd ← Rd + k
+                            reg[ir.ra] = reg[ir.ra] + ir.p;
+                            testOverflow(reg[ir.ra]);
+                            pc++;
+                            break;
+
+                        case SUB: // Rd ← Rd - Rs
+                            reg[ir.ra] = reg[ir.ra] - reg[ir.rb];
+                            testOverflow(reg[ir.ra]);
+                            pc++;
+                            break;
+
+                        case SUBI: // RD <- RD - k // NOVA
+                            reg[ir.ra] = reg[ir.ra] - ir.p;
+                            testOverflow(reg[ir.ra]);
+                            pc++;
+                            break;
+                        case MULT: // Rd <- Rd * Rs
+                            reg[ir.ra] = reg[ir.ra] * reg[ir.rb];
+                            testOverflow(reg[ir.ra]);
+                            pc++;
+                            break;
+                            
+                            // Instrucoes JUMP
+                        case JMP: // PC <- k
                             pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPILK: // If RC < 0 then PC <- k else PC++
-                        if (reg[ir.rb] < 0) {
-                            pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPIEK: // If RC = 0 then PC <- k else PC++
-                        if (reg[ir.rb] == 0) {
-                            pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPIL: // if Rc < 0 then PC <- Rs Else PC <- PC +1
-                        if (reg[ir.rb] < 0) {
-                            pc = reg[ir.ra];
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPIE: // If Rc = 0 Then PC <- Rs Else PC <- PC +1
-                        if (reg[ir.rb] == 0) {
-                            pc = reg[ir.ra];
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPIGM: // If RC > 0 then PC <- [A] else PC++
-                        if (legal(ir.p)) {
+                            break;
+                            
+                        case JMPIM: // PC <- [A]
+                            pc = m[translatePosition(ir.p)].p;
+                            break;
+                            
+                        case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
                             if (reg[ir.rb] > 0) {
+                                pc = reg[ir.ra];
+                            } else {
+                                pc++;
+                            }
+                            break;
+
+                        case JMPIGK: // If RC > 0 then PC <- k else PC++
+                            if (reg[ir.rb] > 0) {
+                                pc = ir.p;
+                            } else {
+                                pc++;
+                            }
+                            break;
+
+                        case JMPILK: // If RC < 0 then PC <- k else PC++
+                            if (reg[ir.rb] < 0) {
+                                pc = ir.p;
+                            } else {
+                                pc++;
+                            }
+                            break;
+
+                        case JMPIEK: // If RC = 0 then PC <- k else PC++
+                            if (reg[ir.rb] == 0) {
+                                pc = ir.p;
+                            } else {
+                                pc++;
+                            }
+                            break;
+
+                        case JMPIL: // if Rc < 0 then PC <- Rs Else PC <- PC +1
+                            if (reg[ir.rb] < 0) {
+                                pc = reg[ir.ra];
+                            } else {
+                                pc++;
+                            }
+                            break;
+
+                        case JMPIE: // If Rc = 0 Then PC <- Rs Else PC <- PC +1
+                            if (reg[ir.rb] == 0) {
+                                pc = reg[ir.ra];
+                            } else {
+                                pc++;
+                            }
+                            break;
+
+                        case JMPIGM: // If RC > 0 then PC <- [A] else PC++
+                            if (legal(ir.p)) {
+                                if (reg[ir.rb] > 0) {
+                                    pc = m[translatePosition(ir.p)].p;
+                                } else {
+                                    pc++;
+                                }
+                            }
+                            break;
+
+                        case JMPILM: // If RC < 0 then PC <- k else PC++
+                            if (reg[ir.rb] < 0) {
                                 pc = m[translatePosition(ir.p)].p;
                             } else {
                                 pc++;
                             }
-                        }
-                        break;
-                    case JMPILM: // If RC < 0 then PC <- k else PC++
-                        if (reg[ir.rb] < 0) {
-                            pc = m[translatePosition(ir.p)].p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPIEM: // If RC = 0 then PC <- k else PC++
-                        if (reg[ir.rb] == 0) {
-                            pc = m[translatePosition(ir.p)].p;
-                        } else {
-                            pc++;
-                        }
-                        break;
-                    case JMPIGT: // If RS>RC then PC <- k else PC++
-                        if (reg[ir.ra] > reg[ir.rb]) {
-                            pc = ir.p;
-                        } else {
-                            pc++;
-                        }
-                        break;
+                            break;
 
-                    case DATA: // pc está sobre área supostamente de dados
-                        irpt = Interrupts.intInstrucaoInvalida;
-                        break;
+                        case JMPIEM: // If RC = 0 then PC <- k else PC++
+                            if (reg[ir.rb] == 0) {
+                                pc = m[translatePosition(ir.p)].p;
+                            } else {
+                                pc++;
+                            }
+                            break;
 
-                    // Chamadas de sistema
-                    case SYSCALL:
+                        case JMPIGT: // If RS>RC then PC <- k else PC++
+                            if (reg[ir.ra] > reg[ir.rb]) {
+                                pc = ir.p;
+                            } else {
+                                pc++;
+                            }
+                            break;
                         
-                        sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
+                        case DATA: // pc está sobre área supostamente de dados
+                            irpt[0] = Interrupts.intInstrucaoInvalida;
+                            break;
                         
-                        // else{
-                        //     pc++;
-                        // }                  // temos IO
-                        break;
+                        // Chamadas de sistema
+                        case SYSCALL:
+                            sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
+                            break;
+                            
+                        case STOP: // por enquanto, para execucao
+                            sysCall.stop(this.pcb, debug);
+                            break;
+                            
+                        case NOP:
+                            break;
+                            
+                            // Inexistente
+                        default:
+                            irpt[0] = Interrupts.intInstrucaoInvalida;
+                            break;
+                    }
 
-                    case STOP: // por enquanto, para execucao
-                        sysCall.stop(this.pcb, debug);
-                        break;
+                    // --------------------------------------------------------------------------------------------------
+                    // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
 
-                    case NOP:
-                        break;
+                    // 0 - Interrupções fatais
+                    // 1 - Interrupções de Page Fault
+                    // 2 - Interrupções de I/O
 
-                    // Inexistente
-                    default:
-                        irpt = Interrupts.intInstrucaoInvalida;
-                        break;
+                    // 10 - Interrupção de troca de processo
+
+
+                    this.verifyInterruptions();
+                    // FIM DO CICLO DE UMA INSTRUÇÃO
+                    
+                } catch (Exception e) {
+                    System.out.println();
                 }
-            }
-
-            // --------------------------------------------------------------------------------------------------
-            // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
-            setNextInterruption();
-            
-            if (irpt == Interrupts.noInterrupt) { // existe interrupção
-                continue;
-            }
-
-            if(irpt == Interrupts.timeOut) {
-                for (int i = 0; i < reg.length; i++) {
-                    this.pcb.contextData[i] = reg[i]; 
-                }
-                pcb.pc = pc;
-                ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
-            }
-            else if(irpt == Interrupts.intIO) {
-                ih.handle(irpt, ir);
-            }
-            else{
-                sysCall.stop(this.pcb ,debug);
-            }
-        } // FIM DO CICLO DE UMA INSTRUÇÃO
+           }
+        }
     }
 
     public int translatePosition(int pos) {
         int page = pos / tamPg;
         int offset = pos % tamPg;
 
+        if(this.tabelaPaginas[page].numPage == -1) {
+            System.out.println("Page fault: " + page);
+            throw new RuntimeException();
+        }
+
+
         return (this.tabelaPaginas[page].numPage * tamPg) + offset;
+    }
+
+    // verifica interrupcoes
+    public void verifyInterruptions() {
+        for(int i = 0; i < irpt.length; i++) {
+            Interrupts interrupt = this.irpt[i];
+
+            if (interrupt == Interrupts.noInterrupt) {
+                continue; // se nao houver interrupcao, continua
+            }
+               
+            if(interrupt == Interrupts.timeOut) {
+                for (int j = 0; j < reg.length; j++) {
+                    this.pcb.contextData[j] = reg[j]; 
+                }
+                
+                pcb.pc = pc;
+                ih.handle(interrupt, ir); // desvia para rotina de tratamento - esta rotina é do SO
+                continue;
+            }
+
+            if(interrupt == Interrupts.intIO) {
+                ih.handle(interrupt, ir);
+                continue;
+            }
+            
+            sysCall.stop(this.pcb ,debug);       
+        }
     }
 }
