@@ -14,9 +14,9 @@ public class InterruptHandling {
             System.out.println(
             "                                               Interrupcao " + irpt + "   pc: " + hw.cpu.translatePosition(hw.cpu.pc));
         }
-        if(hw.cpu.iOInterrrupt == true) {
+        if(irpt == Interrupts.intIO) {
             ps.gp.removeBlockedProcess();
-            hw.cpu.iOInterrrupt = false;
+            hw.cpu.irpt = Interrupts.noInterrupt;
             return;
         }
 

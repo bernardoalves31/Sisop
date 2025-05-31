@@ -1,5 +1,7 @@
 package src.Sistema;
 
+import java.util.Queue;
+
 import src.Sistema.GP.PCB;
 import src.Sistema.GP.PCB.ProgramPage;
 
@@ -10,8 +12,9 @@ public class CPU {
     int pc; // ... composto de program counter,
     private Word ir; // instruction register,
     int[] reg; // registradores da CPU
-    private Interrupts irpt; // durante instrucao, interrupcao pode ser sinalizada
-    public boolean iOInterrrupt;
+    private Queue<Interrupts> interruptsQueue; 
+    public Interrupts irpt; // durante instrucao, interrupcao pode ser sinalizada
+    public boolean ioInterrupt;
     // FIM CONTEXTO DA CPU: tudo que precisa sobre o estado de um processo para
     // executa-lo
     // nas proximas versoes isto pode modificar
@@ -38,7 +41,7 @@ public class CPU {
         reg = new int[10]; // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
 
         debug = _debug; // se true, print da instrucao em execucao
-        iOInterrrupt = false;
+        ioInterrupt = false;
 
     }
 
@@ -91,7 +94,15 @@ public class CPU {
     }
 
     public void setInterruption(Interrupts interrupts) {
-        irpt = interrupts;
+        interruptsQueue.add(interrupts);
+    }
+
+    public void setNextInterruption() {
+        if (interruptsQueue.isEmpty()) {
+            this.irpt = Interrupts.noInterrupt;
+            return;
+        }
+        this.irpt = interruptsQueue.remove();
     }
 
     public void run() { // execucao da CPU supoe que o contexto da CPU, vide acima,
@@ -298,22 +309,27 @@ public class CPU {
                         break;
                 }
             }
+
             // --------------------------------------------------------------------------------------------------
             // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
-            if (irpt != Interrupts.noInterrupt) { // existe interrupção1
-                if(irpt == Interrupts.timeOut) {
-                    for (int i = 0; i < reg.length; i++) {
-                        this.pcb.contextData[i] = reg[i]; 
-                    }
-                    pcb.pc = pc;
-                    ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
-                }
-                else{
-                    sysCall.stop(this.pcb ,debug);
-                }
+            setNextInterruption();
+            
+            if (irpt == Interrupts.noInterrupt) { // existe interrupção
+                continue;
             }
-            if(iOInterrrupt) {
+
+            if(irpt == Interrupts.timeOut) {
+                for (int i = 0; i < reg.length; i++) {
+                    this.pcb.contextData[i] = reg[i]; 
+                }
+                pcb.pc = pc;
+                ih.handle(irpt, ir); // desvia para rotina de tratamento - esta rotina é do SO
+            }
+            else if(irpt == Interrupts.intIO) {
                 ih.handle(irpt, ir);
+            }
+            else{
+                sysCall.stop(this.pcb ,debug);
             }
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }
