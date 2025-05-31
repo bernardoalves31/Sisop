@@ -4,7 +4,7 @@ import src.Sistema.GP.PCB;
 
 public interface GPInterface {
 
-    boolean createProcess(Word[] programImage, int[] tabelaPaginas);
+    boolean createProcess(String programName);
     
     void freeProcess(PCB program);
 }

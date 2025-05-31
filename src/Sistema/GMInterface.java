@@ -1,12 +1,14 @@
 package src.Sistema;
 
+import src.Sistema.GP.PCB.ProgramPage;
+
 public interface GMInterface {
 
-    boolean canAlloc(int nroPalavras, int[] tabelaPaginas);
+    int canAlloc();
 
-    void free(int[] tabelaPaginas);
+    void free(ProgramPage[] tabelaPaginas);
 
-    void load(Word[] programImage, int[] tabelaPaginas);
+    void load(Word[] programImage, int numPage);
 
     void pageControl();
 }

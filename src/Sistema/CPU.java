@@ -1,6 +1,7 @@
 package src.Sistema;
 
 import src.Sistema.GP.PCB;
+import src.Sistema.GP.PCB.ProgramPage;
 
 public class CPU {
     private int maxInt; // valores maximo e minimo para inteiros nesta cpu
@@ -26,7 +27,7 @@ public class CPU {
 
     // Aux
     private int tamPg;
-    public int[] tabelaPaginas;
+    public ProgramPage[] tabelaPaginas;
     private PCB pcb;
 
     public CPU(Memory _mem, boolean _debug) { // ref a MEMORIA passada na criacao da CPU
@@ -53,7 +54,7 @@ public class CPU {
     // verificação de enderecamento
     private boolean legal(int e) { 
         try {
-            translatePosition(e, tabelaPaginas);
+            translatePosition(e);
         } catch (Exception a) {
             setInterruption(Interrupts.intEnderecoInvalido);
             return false;
@@ -102,7 +103,7 @@ public class CPU {
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
-                ir = m[translatePosition(pc, tabelaPaginas)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
+                ir = m[translatePosition(pc)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
                                                // pc, guarda em ir
                 // resto é dump de debug
                 if (debug && ir.opc != Opcode.NOP) {
@@ -114,7 +115,7 @@ public class CPU {
                     System.out.println();
                 }
                 if (debug && ir.opc != Opcode.NOP) {
-                    System.out.print("                      pc: " + translatePosition(this.pc , tabelaPaginas) + "       exec: ");
+                    System.out.print("                      pc: " + translatePosition(this.pc) + "       exec: ");
                     u.dump(ir);
                 }
 
@@ -130,31 +131,31 @@ public class CPU {
                         break;
                     case LDD: // Rd <- [A]
                         if (legal(ir.p)) {
-                            reg[ir.ra] = m[translatePosition(ir.p, tabelaPaginas)].p;
+                            reg[ir.ra] = m[translatePosition(ir.p)].p;
                             pc++;
                         }
                         break;
                     case LDX: // RD <- [RS] // NOVA
                         if (legal(reg[ir.rb])) {
-                            reg[ir.ra] = m[translatePosition(reg[ir.rb], tabelaPaginas)].p;
+                            reg[ir.ra] = m[translatePosition(reg[ir.rb])].p;
                             pc++;
                         }
                         break;
                     case STD: // [A] ← Rs
                         if (legal(ir.p)) {
-                            m[translatePosition(ir.p, tabelaPaginas)].opc = Opcode.DATA;
-                            m[translatePosition(ir.p, tabelaPaginas)].p = reg[ir.ra];
+                            m[translatePosition(ir.p)].opc = Opcode.DATA;
+                            m[translatePosition(ir.p)].p = reg[ir.ra];
                             pc++;
                             if (debug) {
                                 System.out.print("                                  ");
-                                u.dump(translatePosition(ir.p, tabelaPaginas), translatePosition(ir.p, tabelaPaginas) + 1);
+                                u.dump(translatePosition(ir.p), translatePosition(ir.p) + 1);
                             }
                         }
                         break;
                     case STX: // [Rd] ←Rs
                         if (legal(reg[ir.ra])) {
-                            m[translatePosition(reg[ir.ra], tabelaPaginas)].opc = Opcode.DATA;
-                            m[translatePosition(reg[ir.ra], tabelaPaginas)].p = reg[ir.rb];
+                            m[translatePosition(reg[ir.ra])].opc = Opcode.DATA;
+                            m[translatePosition(reg[ir.ra])].p = reg[ir.rb];
                             pc++;
                         }
                         ;
@@ -195,7 +196,7 @@ public class CPU {
                         pc = ir.p;
                         break;
                     case JMPIM: // PC <- [A]
-                        pc = m[translatePosition(ir.p, tabelaPaginas)].p;
+                        pc = m[translatePosition(ir.p)].p;
                         break;
                     case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
                         if (reg[ir.rb] > 0) {
@@ -242,7 +243,7 @@ public class CPU {
                     case JMPIGM: // If RC > 0 then PC <- [A] else PC++
                         if (legal(ir.p)) {
                             if (reg[ir.rb] > 0) {
-                                pc = m[translatePosition(ir.p, tabelaPaginas)].p;
+                                pc = m[translatePosition(ir.p)].p;
                             } else {
                                 pc++;
                             }
@@ -250,14 +251,14 @@ public class CPU {
                         break;
                     case JMPILM: // If RC < 0 then PC <- k else PC++
                         if (reg[ir.rb] < 0) {
-                            pc = m[translatePosition(ir.p, tabelaPaginas)].p;
+                            pc = m[translatePosition(ir.p)].p;
                         } else {
                             pc++;
                         }
                         break;
                     case JMPIEM: // If RC = 0 then PC <- k else PC++
                         if (reg[ir.rb] == 0) {
-                            pc = m[translatePosition(ir.p, tabelaPaginas)].p;
+                            pc = m[translatePosition(ir.p)].p;
                         } else {
                             pc++;
                         }
@@ -317,10 +318,10 @@ public class CPU {
         } // FIM DO CICLO DE UMA INSTRUÇÃO
     }
 
-    public int translatePosition(int pos, int[] tabelaPaginas) {
+    public int translatePosition(int pos) {
         int page = pos / tamPg;
         int offset = pos % tamPg;
 
-        return (tabelaPaginas[page] * tamPg) + offset;
+        return (this.tabelaPaginas[page].numPage * tamPg) + offset;
     }
 }

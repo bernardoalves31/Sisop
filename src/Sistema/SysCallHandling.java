@@ -33,7 +33,7 @@ public class SysCallHandling {
             hw.cpu.getPCB().pc = ++hw.cpu.pc;
 
 
-            hw.device.setMemoryWritePosition(hw.cpu.translatePosition(hw.cpu.reg[9], hw.cpu.tabelaPaginas)); // Sends translated position
+            hw.device.setMemoryWritePosition(hw.cpu.translatePosition(hw.cpu.reg[9])); // Sends translated position
             hw.device.mutexShell = true;
             System.out.println("Program input: ");
             hw.cpu.getPCB().status = ProcessStates.BLOCKED;

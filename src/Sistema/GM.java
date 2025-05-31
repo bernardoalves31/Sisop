@@ -1,5 +1,7 @@
 package src.Sistema;
 
+import src.Sistema.GP.PCB.ProgramPage;
+
 public class GM implements GMInterface {
     private Memory mem;
 
@@ -7,32 +9,22 @@ public class GM implements GMInterface {
         this.mem = memory;
     }
 
-    public boolean canAlloc(int nroPalavras, int[] tabelaPaginas) {
-        int count = 0;
-
-        if (tabelaPaginas.length > mem.getTotalPages()) {
-            return false;
-        }
-
-        for (int i = 0; i < mem.getTotalPages() && count < tabelaPaginas.length; i++) {
+    public int canAlloc() { // Check if there a free page in memory
+        for (int i = 0; i < mem.getTotalPages(); i++) {
             if (mem.getPages().get(i).isFree()) {
-                tabelaPaginas[count] = i;
-                count++;
+                return i; // Found a free page
             }
         }
-        if (count == tabelaPaginas.length)
-            return true;
-
-        return false;
+        return -1; // No free pages available
     }
 
-    public void free(int[] tabelaPaginas) {
+    public void free(ProgramPage[] tabelaPaginas) {
         for (int i = 0; i < tabelaPaginas.length; i++) {
-            mem.getPages().get(tabelaPaginas[i]).setFree(true); // Cleaning pages
+            mem.getPages().get(tabelaPaginas[i].numPage).setFree(true); // Cleaning pages
         }
         for (int i = 0; i < tabelaPaginas.length; i++) {
             for (int j = 0; j < mem.getTamPg(); j++) {
-                int posMem = mem.calculatePage(tabelaPaginas[i]) + j;
+                int posMem = mem.calculatePage(tabelaPaginas[i].numPage) + j;
                 mem.pos[posMem] =  new Word(Opcode.___, -1, -1, -1); // Cleaning memory
             }
         }
@@ -40,22 +32,17 @@ public class GM implements GMInterface {
     }
 
     // Load with pages
-    public void load(Word[] programImage, int[] tabelaPaginas) {
+    public void load(Word[] programImagePages, int numFrame) {
+        mem.getPages().get(numFrame).setFree(false);  // Setting page to false for load
         
-        for (int i = 0; i < tabelaPaginas.length; i++) {
-            mem.getPages().get(tabelaPaginas[i]).setFree(false);  // Setting pages to false for load
-        }
-
         int count = 0;
 
-        for (int i = 0; i < tabelaPaginas.length; i++) {
-            for (int j = 0; j < mem.getTamPg(); j++) {
-                int posMem = mem.calculatePage(tabelaPaginas[i]) + j; // Address with page
-                mem.pos[posMem] = programImage[count]; // Load
-                count++;
+        for (int j = 0; j < mem.getTamPg(); j++) {
+            int posMem = numFrame * mem.getTamPg() + j; // Address with page
+            mem.pos[posMem] = programImagePages[count]; // Load
+            count++;
 
-                if(count >= programImage.length) return;
-            }
+            if(count >= programImagePages.length) return;    
         }
     }
 

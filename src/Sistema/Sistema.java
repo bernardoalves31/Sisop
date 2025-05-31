@@ -7,19 +7,16 @@ import src.Sistema.GP.PCB;
 public class Sistema {
 	public HW hw;
 	public SO so;
-	public Programs progs;
 
 	public Sistema(Memory mem) {
 		hw = new HW(mem);
 		// memoria do HW tem tamMem palavras
 		so = new SO(hw);
 		hw.cpu.setUtilities(so.utils); // permite cpu fazer dump de memoria ao avancar
-		progs = new Programs(mem.getTamPg());
 	}
 
 	public void run() {
-		int[] tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("NOP"))];
-		if (!so.gp.createProcess(progs.retrieveProgram("NOP"), tabelaPaginas)) {
+		if (!so.gp.createProcess("NOP")) {
 			System.out.println("Error initializing system");
 		}
 
@@ -78,58 +75,51 @@ public class Sistema {
 
 					switch (option) {
 						case "1":
-							int[] tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgramPage("fatorial", 0))];
-							if (!so.gp.createProcess(progs.retrieveProgramPage("fatorial",0), tabelaPaginas)) {
+							if (!so.gp.createProcess("fatorial")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 
 							break;
 						case "2":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fatorialV2"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("fatorialV2"), tabelaPaginas)) {
+							if (!so.gp.createProcess("fatorialV2")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "3":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("progMinimo"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("progMinimo"), tabelaPaginas)) {
+							if (!so.gp.createProcess("progMinimo")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "4":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fibonacci10"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("fibonacci10"), tabelaPaginas)) {
+							if (!so.gp.createProcess("fibonacci10")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "5":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fibonacci10v2"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("fibonacci10v2"), tabelaPaginas)) {
+							if (!so.gp.createProcess("fibonacci10v2")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "6":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("fibonacciREAD"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("fibonacciREAD"), tabelaPaginas)) {
+							if (!so.gp.createProcess("fibonacciREAD")) {
 								System.out.println("Error creating process");
 							}
+							
 							System.out.println("Process created successfully");
 							break;
 						case "7":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("PB"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("PB"), tabelaPaginas)) {
+							if (!so.gp.createProcess("PB")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");
 							break;
 						case "8":
-							tabelaPaginas = new int[so.gp.calcNumPages(progs.retrieveProgram("PC"))];
-							if (!so.gp.createProcess(progs.retrieveProgram("PC"), tabelaPaginas)) {
+							if (!so.gp.createProcess("PC")) {
 								System.out.println("Error creating process");
 							}
 							System.out.println("Process created successfully");

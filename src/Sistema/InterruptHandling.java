@@ -12,7 +12,7 @@ public class InterruptHandling {
     public void handle(Interrupts irpt, Word ir) {
         if(ir.opc != Opcode.NOP) {
             System.out.println(
-            "                                               Interrupcao " + irpt + "   pc: " + hw.cpu.translatePosition(hw.cpu.pc, hw.cpu.tabelaPaginas));
+            "                                               Interrupcao " + irpt + "   pc: " + hw.cpu.translatePosition(hw.cpu.pc));
         }
         if(hw.cpu.iOInterrrupt == true) {
             ps.gp.removeBlockedProcess();

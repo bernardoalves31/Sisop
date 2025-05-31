@@ -2,15 +2,9 @@ package src.Sistema;
 import java.util.Arrays;
 
 public class Programs {
-     
-        private final int tamPg;
 
-
-    public Programs(int tamPg) {
-        this.tamPg = tamPg;
-    }
-
-    public Word[] retrieveProgram(String pname) {
+ 
+    public static Word[] retrieveProgram(String pname) {
         for (Program p : progs) {
             if (p != null & p.name == pname)
                 return p.image;
@@ -18,7 +12,7 @@ public class Programs {
         return null;
     }
 
-    public Word[] retrieveProgramPage(String pname, int page) {
+    public static Word[] retrieveProgramPage(String pname, int page, int tamPg) {
         for (Program p : progs) {
             if (p != null & p.name == pname) {
                 int start = page * tamPg;
@@ -34,7 +28,7 @@ public class Programs {
         return null;
     }
 
-    public Program[] progs = {
+    public static Program[] progs = {
         new Program("fatorial",
             new Word[] {
                 // este fatorial so aceita valores positivos. nao pode ser zero
