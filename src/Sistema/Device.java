@@ -21,7 +21,7 @@ public class Device {
                 word.p = Integer.parseInt(userInput);
                 this.memory.pos[memoryWritePosition] = word;
                 this.userInput = "";
-                cpu.setInterruption(Interrupts.intIO, 2);
+                cpu.setInterruption(Interrupts.intIO);
                 mutexShell = false;
             }
         }

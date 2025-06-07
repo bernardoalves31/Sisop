@@ -24,7 +24,7 @@ public class ProcessScheduler {
     }
 
     public void interruptTimeOut() {
-        cpu.setInterruption(Interrupts.timeOut, 10);
+        cpu.setInterruption(Interrupts.timeOut);
     }
 
     public void changeProcess() {

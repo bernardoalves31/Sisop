@@ -44,6 +44,11 @@ public class GP implements GPInterface {
                 this.numPage = -1; 
                 this.wasLoaded = false; 
             }
+
+            @Override
+            public String toString() {
+                return String.valueOf(this.numPage);
+            }
         }
     }
 
@@ -63,7 +68,7 @@ public class GP implements GPInterface {
         }
 
         Word[] programImage = Programs.retrieveProgramPage(programName, 0, hw.mem.getTamPg());
-        ProgramPage[] tabelaPaginas = new ProgramPage[calcNumPages(programImage)];
+        ProgramPage[] tabelaPaginas = new ProgramPage[1];
 
         so.gm.load(programImage, allocatedFrame);
         PCB pcb = new PCB(tabelaPaginas);
@@ -104,7 +109,7 @@ public class GP implements GPInterface {
             for (int j = 0; j < hw.mem.getTamPg(); j++) {
                 int posMem = hw.mem.calculatePage(page) + j;
                 Word w = hw.mem.pos[posMem];
-                System.out.print("Page: " + page);
+                System.out.print("Frame: " + page);
                 System.out.print(" Position: " + posMem);
                 System.out.print(" [ ");
                 System.out.print(w.opc);

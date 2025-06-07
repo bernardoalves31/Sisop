@@ -1,5 +1,6 @@
 package src.Sistema;
 
+import java.util.PriorityQueue;
 import java.util.Queue;
 
 import src.Sistema.GP.PCB;
@@ -11,8 +12,9 @@ public class CPU {
     // CONTEXTO da CPU ...
     int pc; // ... composto de program counter,
     private Word ir; // instruction register,
-    int[] reg; // registradores da CPU 
-    public Interrupts[] irpt; // durante instrucao, interrupcao pode ser sinalizada
+    int[] reg; // registradores da CPU
+    public PriorityQueue<Interrupts> irptQueue;
+    public Interrupts irpt; // durante instrucao, interrupcao pode ser sinalizada
     // FIM CONTEXTO DA CPU: tudo que precisa sobre o estado de um processo para
     // executa-lo
     // nas proximas versoes isto pode modificar
@@ -39,12 +41,7 @@ public class CPU {
         reg = new int[10]; // aloca o espaço dos registradores - regs 8 e 9 usados somente para IO
 
         debug = _debug; // se true, print da instrucao em execucao
-        irpt = new Interrupts[10]; // vetor de interrupcoes, 10 posicoes
-
-        for (int i = 0; i < irpt.length; i++) {
-            irpt[i] = Interrupts.noInterrupt; 
-        }
-
+        this.irptQueue = new PriorityQueue<>(); // Interrupt queue
     }
 
     public void setAddressOfHandlers(InterruptHandling _ih, SysCallHandling _sysCall) {
@@ -57,11 +54,11 @@ public class CPU {
     }
 
     // verificação de enderecamento
-    private boolean legal(int e) { 
+    private boolean legal(int e) {
         try {
             translatePosition(e);
         } catch (Exception a) {
-            setInterruption(Interrupts.intEnderecoInvalido, 9);
+            setInterruption(Interrupts.intEnderecoInvalido);
             return false;
         }
         return true;
@@ -69,7 +66,7 @@ public class CPU {
 
     private boolean testOverflow(int v) { // toda operacao matematica deve avaliar se ocorre overflow
         if ((v < minInt) || (v > maxInt)) {
-            irpt[0] = Interrupts.intOverflow; // se houver liga interrupcao no meio da exec da instrucao
+            setInterruption(Interrupts.intOverflow); // se houver liga interrupcao no meio da exec da instrucao
             return false;
         }
         ;
@@ -80,11 +77,11 @@ public class CPU {
                                       // [ nesta versao é somente colocar o PC na posicao 0 ]
         this.pcb = pcb;
         for (int i = 0; i < pcb.contextData.length; i++) {
-            reg[i] = pcb.contextData[i];               
+            reg[i] = pcb.contextData[i];
         }
         this.pc = pcb.pc; // pc cfe endereco logico
         this.tabelaPaginas = pcb.tabelaPaginas;
-        irpt[10] = Interrupts.noInterrupt; // reset da interrupcao de troca de processo
+        irpt = Interrupts.noInterrupt; // reset da interrupcao de troca de processo
     }
 
     public PCB getPCB() {
@@ -95,22 +92,32 @@ public class CPU {
         debug = _debug;
     }
 
-    public void setInterruption(Interrupts interrupts, int index) {
-        irpt[index] = interrupts;
+    public void setInterruption(Interrupts interrupts) {
+        this.irptQueue.add(interrupts);
+    }
+
+    public void getQueueInterrupt() {
+        if (irptQueue.size() == 0) {
+            irpt = Interrupts.noInterrupt;
+            return;
+        }
+        irpt = irptQueue.poll();
     }
 
     public void run() { // execucao da CPU supoe que o contexto da CPU, vide acima,
         // esta devidamente setado
 
         while (true) { // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada
-                           // caso.
-            if(this.pcb == null) continue;
+                       // caso.
+            if (this.pcb == null)
+                continue;
             // --------------------------------------------------------------------------------------------------
             // FASE DE FETCH
             if (legal(pc)) { // pc valido
                 try {
-                    ir = m[translatePosition(pc)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada por
-                                                // pc, guarda em ir
+                    ir = m[translatePosition(pc)]; // <<<<<<<<<<<< AQUI faz FETCH - busca posicao da memoria apontada
+                                                   // por
+                                                   // pc, guarda em ir
                     // resto é dump de debug
                     if (debug && ir.opc != Opcode.NOP) {
                         System.out.print("                                              regs: ");
@@ -127,7 +134,7 @@ public class CPU {
 
                     // --------------------------------------------------------------------------------------------------
                     // FASE DE EXECUCAO DA INSTRUCAO CARREGADA NO ir
-                
+
                     switch (ir.opc) { // conforme o opcode (código de operação) executa
                         // Instrucoes de Busca e Armazenamento em Memoria
                         case LDI: // Rd ← k veja a tabela de instrucoes do HW simulado para entender a semantica
@@ -174,14 +181,14 @@ public class CPU {
                             reg[ir.ra] = reg[ir.rb];
                             pc++;
                             break;
-                        
-                            // Instrucoes Aritmeticas
+
+                        // Instrucoes Aritmeticas
                         case ADD: // Rd ← Rd + Rs
                             reg[ir.ra] = reg[ir.ra] + reg[ir.rb];
                             testOverflow(reg[ir.ra]);
                             pc++;
                             break;
-                            
+
                         case ADDI: // Rd ← Rd + k
                             reg[ir.ra] = reg[ir.ra] + ir.p;
                             testOverflow(reg[ir.ra]);
@@ -204,16 +211,16 @@ public class CPU {
                             testOverflow(reg[ir.ra]);
                             pc++;
                             break;
-                            
-                            // Instrucoes JUMP
+
+                        // Instrucoes JUMP
                         case JMP: // PC <- k
                             pc = ir.p;
                             break;
-                            
+
                         case JMPIM: // PC <- [A]
                             pc = m[translatePosition(ir.p)].p;
                             break;
-                            
+
                         case JMPIG: // If Rc > 0 Then PC ← Rs Else PC ← PC +1
                             if (reg[ir.rb] > 0) {
                                 pc = reg[ir.ra];
@@ -295,46 +302,40 @@ public class CPU {
                                 pc++;
                             }
                             break;
-                        
+
                         case DATA: // pc está sobre área supostamente de dados
-                            irpt[0] = Interrupts.intInstrucaoInvalida;
+                            this.setInterruption(Interrupts.intInstrucaoInvalida);
                             break;
-                        
+
                         // Chamadas de sistema
                         case SYSCALL:
                             sysCall.handle(); // <<<<< aqui desvia para rotina de chamada de sistema, no momento so
                             break;
-                            
+
                         case STOP: // por enquanto, para execucao
                             sysCall.stop(this.pcb, debug);
                             break;
-                            
+
                         case NOP:
                             break;
-                            
-                            // Inexistente
+
+                        // Inexistente
                         default:
-                            irpt[0] = Interrupts.intInstrucaoInvalida;
+                            this.setInterruption(Interrupts.intInstrucaoInvalida);
                             break;
                     }
 
                     // --------------------------------------------------------------------------------------------------
                     // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
-
-                    // 0 - Interrupções fatais
-                    // 1 - Interrupções de Page Fault
-                    // 2 - Interrupções de I/O
-
-                    // 10 - Interrupção de troca de processo
-
+                    this.getQueueInterrupt();
 
                     this.verifyInterruptions();
                     // FIM DO CICLO DE UMA INSTRUÇÃO
-                    
+
                 } catch (Exception e) {
                     System.out.println();
                 }
-           }
+            }
         }
     }
 
@@ -342,40 +343,37 @@ public class CPU {
         int page = pos / tamPg;
         int offset = pos % tamPg;
 
-        if(this.tabelaPaginas[page].numPage == -1) {
+        if (this.tabelaPaginas[page].numPage == -1) {
             System.out.println("Page fault: " + page);
             throw new RuntimeException();
         }
 
-
         return (this.tabelaPaginas[page].numPage * tamPg) + offset;
     }
 
-    // verifica interrupcoes
     public void verifyInterruptions() {
-        for(int i = 0; i < irpt.length; i++) {
-            Interrupts interrupt = this.irpt[i];
 
-            if (interrupt == Interrupts.noInterrupt) {
-                continue; // se nao houver interrupcao, continua
-            }
-               
-            if(interrupt == Interrupts.timeOut) {
-                for (int j = 0; j < reg.length; j++) {
-                    this.pcb.contextData[j] = reg[j]; 
-                }
-                
-                pcb.pc = pc;
-                ih.handle(interrupt, ir); // desvia para rotina de tratamento - esta rotina é do SO
-                continue;
-            }
-
-            if(interrupt == Interrupts.intIO) {
-                ih.handle(interrupt, ir);
-                continue;
-            }
-            
-            sysCall.stop(this.pcb ,debug);       
+        if (irpt == Interrupts.noInterrupt) {
+            return;
         }
+
+        if (irpt == Interrupts.timeOut) {
+            this.saveContext();
+            pcb.pc = pc;
+            ih.handle(irpt, ir);
+        }
+
+        if (irpt == Interrupts.intIO) {
+            ih.handle(irpt, ir);
+        }
+
+        sysCall.stop(this.pcb, debug);
+    }
+
+    public void saveContext() {
+        for (int i = 0; i < reg.length; i++) {
+            this.pcb.contextData[i] = reg[i];
+        }
+
     }
 }

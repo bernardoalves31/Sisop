@@ -16,7 +16,7 @@ public class InterruptHandling {
         }
         if(irpt == Interrupts.intIO) {
             ps.gp.removeBlockedProcess();
-            hw.cpu.irpt[2] = Interrupts.noInterrupt;
+            hw.cpu.irpt = Interrupts.noInterrupt;
             return;
         }
 
