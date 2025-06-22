@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import src.Sistema.GP.PCB.ProgramPage;
+import src.Sistema.ProcessWaitingPage.ProcessPageTarget;
 
 public class GP implements GPInterface {
     private HW hw;
@@ -14,7 +15,7 @@ public class GP implements GPInterface {
     private Queue<PCB> processesInQueue;
     private Queue<PCB> processBlockedIOInQueue;
     private Queue<PCB> processBlockedVMInQueue;
-    private ProcessWaitingPage processWaitingTargetPage;
+    public ProcessWaitingPage processWaitingTargetPage;
 
     public class PCB {
         Program[] programs;
@@ -63,6 +64,7 @@ public class GP implements GPInterface {
         this.processesInQueue = new LinkedList<PCB>();
         this.processBlockedIOInQueue = new LinkedList<PCB>();
         this.processBlockedVMInQueue= new LinkedList<PCB>();
+        this.processWaitingTargetPage = new ProcessWaitingPage();
     }
 
     public boolean createProcess(String programName) {
@@ -135,18 +137,21 @@ public class GP implements GPInterface {
     }
 
     public Word[] copyPage(int page) {
+        System.out.println(page);
         Word[] words = new Word[hw.mem.getTamPg()];
 
-        for (int i = 0; i < words.length; i++) {
+        for (int i = 0; i < hw.mem.getTamPg(); i++) {
             int indexPage = page * hw.mem.getTamPg() + i;
             words[i] = hw.mem.pos[indexPage];
         }
         return words;
     }
 
-    public void vitimate() {
+    public void vitimate(PCB pcb, int pageFaultPage) {
+        int indexPageVitimate = so.gm.indexFifoDelete;
         so.gm.vitimate();
-        hw.cpu.setInterruption(null);
+        ProcessPageTarget process = this.processWaitingTargetPage.new ProcessPageTarget(pcb, pageFaultPage, indexPageVitimate);
+        this.processWaitingTargetPage.getQueue().add(process);
     }
 
     public int calcNumPages(Word[] programImage) {

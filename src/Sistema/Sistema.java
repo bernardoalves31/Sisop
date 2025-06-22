@@ -233,10 +233,18 @@ public class Sistema {
 			}
 		});
 		deviceThread.start();
+
+		Thread hardDriveThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				hw.hardDrive.run();
+			}
+		});
+		hardDriveThread.start();
 	}
 
 	public static void main(String args[]) {
-		int tamMem = 1024;
+		int tamMem = 32;
 		int tamPg = 8;
 
 		Sistema s = new Sistema(new Memory(tamMem, tamPg));

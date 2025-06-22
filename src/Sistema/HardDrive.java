@@ -10,7 +10,7 @@ public class HardDrive {
     private final int tamPg;
     private HW hw;
     private LinkedList<ProcessMemory> pagesSaved;
-    private volatile Queue<ProcessRequest> saveRequestQueue;
+    private volatile Queue<ProcessSaveRequest> saveRequestQueue;
     private volatile Queue<ProcessRequest> loadRequestQueue;
 
     public HardDrive(HW hw) {
@@ -33,47 +33,98 @@ public class HardDrive {
         }
     }
 
+    private class ProcessSaveRequest {
+        private int processId;
+        private int page;
+        private Word[] programImage;
+
+        public ProcessSaveRequest(int processId, int page, Word[] programImage) {
+            this.processId = processId;
+            this.page = page;
+            this.programImage = programImage;
+        }
+    }
+
     private class ProcessMemory {
         private int processId;
-        private Page[] pages;
+        private LinkedList<Page> pages;
+
+        public ProcessMemory(int processId) {
+            this.processId = processId;
+            this.pages = new LinkedList<>();
+        }
     }
 
     private class Page {
         Word[] word;
         int pageIndex;
+
+        public Page(Word[] word, int pageIndex) {
+            this.word = word;
+            this.pageIndex = pageIndex;
+        }
     }
 
     public void run() {
-        while(true) {
-            if(this.loadRequestQueue.size() < 0) {
-                ProcessRequest process = this.loadRequestQueue.poll();
-                this.load(process);
+        while (true) {
+            if (this.loadRequestQueue.size() > 0) {
+                this.load();
+            }
+
+            if (this.saveRequestQueue.size() > 0) {
+                this.save();
             }
         }
     }
 
-    public void load(ProcessRequest processRequest) {
-        ProcessMemory process = this.pagesSaved.stream().filter(pm -> pm.processId == processRequest.processId).findFirst().orElse(null);
+    public void load() {
+        ProcessRequest processRequest = this.loadRequestQueue.remove();
 
-        // if (process == null) {
-        //     throw new Exception();
-        // }
+        ProcessMemory process = this.pagesSaved.stream().filter(pm -> pm.processId == processRequest.processId)
+                .findFirst().orElse(null);
 
-        Page selectedPage = Arrays.stream(process.pages).filter(p -> p.pageIndex == processRequest.pageRequested).findFirst().orElse(null);
+        for (int i = 0; i < process.pages.size(); i++) {
+            System.out.println(process.pages.get(i).pageIndex);
+        }
 
-        // if (selectedPage == null) {
-        //     throw new Exception();
-        // }
+        System.out.println("Pagina requested: "+ processRequest.pageRequested);
 
-        // int canAlloc = so.gm.canAlloc();
-
-        // if (canAlloc == -1) {
-        //     System.out.println("Sem páginas dispóniveis");
-        // }
+        Page selectedPage = process.pages.stream().filter(p -> p.pageIndex == processRequest.pageRequested).findFirst()
+                .orElse(null);
 
 
+        for (int i = 0; i < selectedPage.word.length; i++) {
+            hw.mem.pos[(processRequest.pageTarget * tamPg) + i] = selectedPage.word[i];
+        }
 
+        
 
+        process.pages.remove(selectedPage);
+
+        hw.cpu.setInterruption(Interrupts.intVMLoad);
+
+        // Setar pagina carregada na tabela de paginas do programa
+    }
+
+    public void save() {
+        ProcessSaveRequest request = this.saveRequestQueue.remove();
+
+        ProcessMemory process = this.pagesSaved.stream().filter(pm -> pm.processId == request.processId)
+                .findFirst().orElse(null);
+
+        if (process != null) {
+            process.pages.add(new Page(request.programImage, request.page));
+            hw.cpu.setInterruption(Interrupts.intPageSaved);
+            return;
+        }
+
+        ProcessMemory processMemory = new ProcessMemory(request.processId);
+        System.out.println("Pagina salva como:" + request.page);
+        processMemory.pages.add(new Page(request.programImage, request.page));
+        this.pagesSaved.add(processMemory);
+
+        System.out.println("Salvou a pagina");
+        hw.cpu.setInterruption(Interrupts.intPageSaved);
     }
 
     public void addRequest(int processId, int pageRequested, int pageTarget) {
@@ -81,7 +132,8 @@ public class HardDrive {
         this.loadRequestQueue.add(newRequest);
     }
 
-    public void save() {
-
+    public void addSaveRequest(int processId, int page, Word[] programImage) {
+        ProcessSaveRequest newRequest = new ProcessSaveRequest(processId, page, programImage);
+        this.saveRequestQueue.add(newRequest);
     }
 }

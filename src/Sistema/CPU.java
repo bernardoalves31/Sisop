@@ -58,12 +58,13 @@ public class CPU {
 
     // verificação de enderecamento
     private boolean legal(int e) {
-        if (e >= 0 && e < m.length) {
-            return true;
-        } else {
-            irpt = Interrupts.intEnderecoInvalido; // se nao for liga interrupcao no meio da exec da instrucao
-            return false;
-        }
+        // if (e >= 0 && e < m.length) {
+        //     return true;
+        // } else {
+        //     irpt = Interrupts.intEnderecoInvalido; // se nao for liga interrupcao no meio da exec da instrucao
+        //     return false;
+        // }
+        return true;
     }
 
     private boolean testOverflow(int v) { // toda operacao matematica deve avaliar se ocorre overflow
@@ -112,6 +113,14 @@ public class CPU {
 
         while (true) { // ciclo de instrucoes. acaba cfe resultado da exec da instrucao, veja cada
                        // caso.
+
+             try {
+                 Thread.sleep(200);
+             } catch (InterruptedException e) {
+                 // TODO Auto-generated catch block
+                 e.printStackTrace();
+             }
+
             if (this.pcb == null)
                 continue;
             // --------------------------------------------------------------------------------------------------
@@ -328,7 +337,7 @@ public class CPU {
                             break;
                     }
 
-                } catch (RuntimeException e) {
+                } catch (Exception e) {
                     System.out.println("Page fault");
                     this.setInterruption(Interrupts.intPageFault);
                 }
@@ -381,6 +390,16 @@ public class CPU {
 
         if (irpt == Interrupts.intLoaded) {
             ih.handleLoaded();
+        }
+
+        if (irpt == Interrupts.intPageSaved) {
+            ih.handlePageSaved();
+            System.out.println("Entrou no tratamento");
+        }
+
+        if (irpt == Interrupts.intVMLoad) {
+            ih.handleLoaded();
+            System.out.println("Página carregada na mémoria");
         }
     }
 

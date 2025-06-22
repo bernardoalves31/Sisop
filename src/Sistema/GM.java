@@ -58,10 +58,12 @@ public class GM implements GMInterface {
     }
 
     private int next() {
-        if (this.indexFifoDelete * mem.getTamPg() > mem.getTamMem()) {
-            return 1;
+        ++this.indexFifoDelete;
+        if (this.indexFifoDelete * mem.getTamPg() >= mem.getTamMem()) {
+            this.indexFifoDelete = 1;
+            return this.indexFifoDelete;
         }
-        return ++this.indexFifoDelete;
+        return this.indexFifoDelete;
         
     }
 
