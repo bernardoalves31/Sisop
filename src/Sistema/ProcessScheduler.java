@@ -30,7 +30,8 @@ public class ProcessScheduler {
     public void changeProcess() {
         PCB pcb = cpu.getPCB();
         if(pcb.status == ProcessStates.BLOCKED) {
-            gp.getBlockedProcessQueue().add(pcb);
+            // gp.getBlockedIOProcessQueue().add(pcb);
+            //gp.getProcessQueue().poll();
         }
         else{
             pcb.status = ProcessStates.READY;

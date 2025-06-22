@@ -14,7 +14,7 @@ public class SO {
         gp = new GP(hw, this);
         ps = new ProcessScheduler(gp, hw.cpu);
         sc = new SysCallHandling(hw, ps); // chamadas de sistema
-        ih = new InterruptHandling(hw, ps); // rotinas de tratamento de int
+        ih = new InterruptHandling(hw, ps, this); // rotinas de tratamento de int
         hw.cpu.setAddressOfHandlers(ih, sc);
     }
 }

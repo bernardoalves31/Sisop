@@ -12,37 +12,41 @@ public class GP implements GPInterface {
     private SO so;
     private int countIds;
     private Queue<PCB> processesInQueue;
-    private Queue<PCB> processBlockedInQueue;
+    private Queue<PCB> processBlockedIOInQueue;
+    private Queue<PCB> processBlockedVMInQueue;
+    private ProcessWaitingPage processWaitingTargetPage;
 
     public class PCB {
         Program[] programs;
-        ProgramPage[] tabelaPaginas;
+        volatile ProgramPage[] tabelaPaginas;
         int id;
         int priority;
         int pc;
         ProcessStates status;
         int[] contextData;
+        String pname;
 
-        public PCB(ProgramPage[] tabelaPaginas) {
+        public PCB(ProgramPage[] tabelaPaginas, String pname) {
             this.tabelaPaginas = tabelaPaginas;
             this.id = countIds++;
             this.pc = 0;
             this.priority = 0;
             this.status = ProcessStates.READY;
             this.contextData = new int[10];
+            this.pname = pname;
 
             for (int i = 0; i < tabelaPaginas.length; i++) { // Initialize the page table
-                tabelaPaginas[i] = new ProgramPage(); 
+                tabelaPaginas[i] = new ProgramPage();
             }
         }
 
         public class ProgramPage {
             public int numPage;
-            public boolean wasLoaded;
+            public boolean modified;
 
             public ProgramPage() {
-                this.numPage = -1; 
-                this.wasLoaded = false; 
+                this.numPage = -1;
+                this.modified = false;
             }
 
             @Override
@@ -57,7 +61,8 @@ public class GP implements GPInterface {
         this.hw = hw;
         this.countIds = 0;
         this.processesInQueue = new LinkedList<PCB>();
-        this.processBlockedInQueue = new LinkedList<PCB>();
+        this.processBlockedIOInQueue = new LinkedList<PCB>();
+        this.processBlockedVMInQueue= new LinkedList<PCB>();
     }
 
     public boolean createProcess(String programName) {
@@ -71,20 +76,77 @@ public class GP implements GPInterface {
         ProgramPage[] tabelaPaginas = new ProgramPage[1];
 
         so.gm.load(programImage, allocatedFrame);
-        PCB pcb = new PCB(tabelaPaginas);
+        PCB pcb = new PCB(tabelaPaginas, programName);
 
         tabelaPaginas[0].numPage = allocatedFrame;
-        tabelaPaginas[0].wasLoaded = true; 
-        
+        tabelaPaginas[0].modified = true;
+
         processesInQueue.add(pcb);
 
         return true;
     }
 
-    public void removeBlockedProcess() { 
-        PCB pcb = this.processBlockedInQueue.remove();
+    public void removeBlockedIOProcess() {
+        PCB pcb = this.processBlockedIOInQueue.remove();
         pcb.status = ProcessStates.READY;
         this.processesInQueue.add(pcb);
+    }
+
+    public void removeBlockedVMProcess() {
+        PCB pcb = this.processBlockedVMInQueue.remove();
+        pcb.status = ProcessStates.READY;
+        this.processesInQueue.add(pcb);
+    }
+
+    public void loadPage(PCB pcb, int pageFaultPage, int pageTarget) {
+        Word[] programImage = Programs.retrieveProgramPage(pcb.pname, pageFaultPage, hw.mem.getTamPg());
+
+        if (pcb.tabelaPaginas.length > pageFaultPage) {
+            ProgramPage newPage = pcb.new ProgramPage();
+            newPage.numPage = pageTarget;
+            newPage.modified = true;
+            pcb.tabelaPaginas[pageFaultPage] = newPage;
+            so.gm.load(programImage, pageTarget);
+        } else {
+            ProgramPage[] newTabelaPaginas = new ProgramPage[pageFaultPage + 1];
+
+            for (int i = 0; i < pcb.tabelaPaginas.length; i++) {
+                newTabelaPaginas[i] = pcb.tabelaPaginas[i];
+            }
+
+            for (int i = pcb.tabelaPaginas.length; i < newTabelaPaginas.length; i++) {
+                if(i != pageFaultPage) {
+                    ProgramPage newPage = pcb.new ProgramPage();
+                    newPage.numPage = -1;
+                    newPage.modified = false;
+                    newTabelaPaginas[i] = newPage;
+                }
+                else{
+                    ProgramPage newPage = pcb.new ProgramPage();
+                    newPage.numPage = pageTarget;
+                    newPage.modified = true;
+                    newTabelaPaginas[i] = newPage;
+                }
+            }
+            pcb.tabelaPaginas = newTabelaPaginas;
+        }
+        so.gm.load(programImage, pageTarget);
+        hw.cpu.setInterruption(Interrupts.intLoaded);
+    }
+
+    public Word[] copyPage(int page) {
+        Word[] words = new Word[hw.mem.getTamPg()];
+
+        for (int i = 0; i < words.length; i++) {
+            int indexPage = page * hw.mem.getTamPg() + i;
+            words[i] = hw.mem.pos[indexPage];
+        }
+        return words;
+    }
+
+    public void vitimate() {
+        so.gm.vitimate();
+        hw.cpu.setInterruption(null);
     }
 
     public int calcNumPages(Word[] programImage) {
@@ -136,17 +198,17 @@ public class GP implements GPInterface {
 
     public void ps() {
         Iterator<PCB> iterator = processesInQueue.iterator();
-        if(!iterator.hasNext()) {
+        if (!iterator.hasNext()) {
             System.out.println("List is empty");
             return;
         }
         while (iterator.hasNext()) {
             PCB pcb = iterator.next();
-            if(pcb == null) {
+            if (pcb == null) {
                 System.out.println("List is empty");
                 return;
             }
-            
+
             int[] pages = Arrays.stream(pcb.tabelaPaginas)
                     .mapToInt(page -> page.numPage)
                     .toArray();
@@ -168,7 +230,11 @@ public class GP implements GPInterface {
         return processesInQueue.peek();
     }
 
-    public Queue<PCB> getBlockedProcessQueue() {
-        return processBlockedInQueue;
+    public Queue<PCB> getBlockedIOProcessQueue() {
+        return processBlockedIOInQueue;
+    }
+
+    public Queue<PCB> getBlockedVMProcessQueue() {
+        return processBlockedVMInQueue;
     }
 }

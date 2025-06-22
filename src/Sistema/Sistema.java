@@ -196,6 +196,13 @@ public class Sistema {
 	}
 
 	public void execAll() {
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		Thread processThread = new Thread(new Runnable() {
 			@Override
 			public void run() {

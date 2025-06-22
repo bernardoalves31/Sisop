@@ -4,9 +4,11 @@ import src.Sistema.GP.PCB.ProgramPage;
 
 public class GM implements GMInterface {
     private Memory mem;
+    public int indexFifoDelete;
 
     public GM(Memory memory) {
         this.mem = memory;
+        this.indexFifoDelete = 1;
     }
 
     public int canAlloc() { // Check if there a free page in memory
@@ -44,6 +46,23 @@ public class GM implements GMInterface {
 
             if(count >= programImagePages.length) return;    
         }
+    }
+
+    public void vitimate() {
+         for (int i = 0; i < mem.getTamPg(); i++) {
+            int index = this.indexFifoDelete * mem.getTamPg() + i;
+            this.mem.pos[index] = new Word(Opcode.___, -1, -1, -1);                    
+        }
+        mem.getPages().get(this.indexFifoDelete).setFree(true);
+        this.next();
+    }
+
+    private int next() {
+        if (this.indexFifoDelete * mem.getTamPg() > mem.getTamMem()) {
+            return 1;
+        }
+        return ++this.indexFifoDelete;
+        
     }
 
     public void pageControl() {

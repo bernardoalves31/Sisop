@@ -34,5 +34,4 @@ public class Device {
     public void setMemoryWritePosition(int memoryWritePosition) {
         this.memoryWritePosition = memoryWritePosition;
     }
-
 }

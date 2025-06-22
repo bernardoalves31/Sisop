@@ -3,6 +3,8 @@ package src.Sistema;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import org.w3c.dom.events.EventException;
+
 import src.Sistema.GP.PCB;
 import src.Sistema.GP.PCB.ProgramPage;
 
@@ -32,6 +34,7 @@ public class CPU {
     private int tamPg;
     public ProgramPage[] tabelaPaginas;
     private PCB pcb;
+    private int pageFaultPage;
 
     public CPU(Memory _mem, boolean _debug) { // ref a MEMORIA passada na criacao da CPU
         maxInt = 32767; // capacidade de representacao modelada
@@ -55,13 +58,12 @@ public class CPU {
 
     // verificação de enderecamento
     private boolean legal(int e) {
-        try {
-            translatePosition(e);
-        } catch (Exception a) {
-            setInterruption(Interrupts.intEnderecoInvalido);
+        if (e >= 0 && e < m.length) {
+            return true;
+        } else {
+            irpt = Interrupts.intEnderecoInvalido; // se nao for liga interrupcao no meio da exec da instrucao
             return false;
         }
-        return true;
     }
 
     private boolean testOverflow(int v) { // toda operacao matematica deve avaliar se ocorre overflow
@@ -93,6 +95,7 @@ public class CPU {
     }
 
     public void setInterruption(Interrupts interrupts) {
+    //    System.out.println(interrupts);
         this.irptQueue.add(interrupts);
     }
 
@@ -325,16 +328,17 @@ public class CPU {
                             break;
                     }
 
-                    // --------------------------------------------------------------------------------------------------
-                    // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
-                    this.getQueueInterrupt();
-
-                    this.verifyInterruptions();
-                    // FIM DO CICLO DE UMA INSTRUÇÃO
-
-                } catch (Exception e) {
-                    System.out.println();
+                } catch (RuntimeException e) {
+                    System.out.println("Page fault");
+                    this.setInterruption(Interrupts.intPageFault);
                 }
+                // --------------------------------------------------------------------------------------------------
+                // VERIFICA INTERRUPÇÃO !!! - TERCEIRA FASE DO CICLO DE INSTRUÇÕES
+                this.getQueueInterrupt();
+
+                this.verifyInterruptions();
+                // FIM DO CICLO DE UMA INSTRUÇÃO
+
             }
         }
     }
@@ -343,8 +347,13 @@ public class CPU {
         int page = pos / tamPg;
         int offset = pos % tamPg;
 
+        if (this.tabelaPaginas.length <= page) {
+            this.pageFaultPage = page;
+            throw new RuntimeException();
+        }
+
         if (this.tabelaPaginas[page].numPage == -1) {
-            System.out.println("Page fault: " + page);
+            this.pageFaultPage = page;
             throw new RuntimeException();
         }
 
@@ -352,14 +361,13 @@ public class CPU {
     }
 
     public void verifyInterruptions() {
+        this.saveContext();
 
         if (irpt == Interrupts.noInterrupt) {
             return;
         }
 
         if (irpt == Interrupts.timeOut) {
-            this.saveContext();
-            pcb.pc = pc;
             ih.handle(irpt, ir);
         }
 
@@ -367,13 +375,19 @@ public class CPU {
             ih.handle(irpt, ir);
         }
 
-        sysCall.stop(this.pcb, debug);
+        if (irpt == Interrupts.intPageFault) {
+            ih.handleVM(pageFaultPage);
+        }
+
+        if (irpt == Interrupts.intLoaded) {
+            ih.handleLoaded();
+        }
     }
 
     public void saveContext() {
+        this.pcb.pc = this.pc;
         for (int i = 0; i < reg.length; i++) {
             this.pcb.contextData[i] = reg[i];
         }
-
     }
 }

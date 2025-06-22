@@ -30,13 +30,17 @@ public class SysCallHandling {
             for (int i = 0; i < hw.cpu.reg.length; i++) {
                 hw.cpu.getPCB().contextData[i] = hw.cpu.reg[i]; 
             }
+
+            hw.device.setMemoryWritePosition(hw.cpu.translatePosition(hw.cpu.reg[9])); // Sends translated position
+            
             hw.cpu.getPCB().pc = ++hw.cpu.pc;
 
 
-            hw.device.setMemoryWritePosition(hw.cpu.translatePosition(hw.cpu.reg[9])); // Sends translated position
             hw.device.mutexShell = true;
             System.out.println("Program input: ");
-            hw.cpu.getPCB().status = ProcessStates.BLOCKED;
+            PCB blocked = hw.cpu.getPCB();
+            blocked.status = ProcessStates.BLOCKED;
+            ps.gp.getBlockedIOProcessQueue().add(blocked);
             ps.changeProcess();
 
         } else if (hw.cpu.reg[8] == 2) {
